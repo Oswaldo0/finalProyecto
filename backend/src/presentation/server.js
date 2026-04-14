@@ -3,9 +3,11 @@ import "dotenv/config";
 import { checkDatabaseConnection, closeDatabasePool } from "../infrastructure/database/mysql.js";
 import {
   createStudent,
+  getEditableStudentByExpediente,
   getStudentByExpediente,
   getStudentFormOptions,
   getStudentsWithSchema,
+  updateStudent,
 } from "../infrastructure/repositories/studentRepository.js";
 import { buildStudentReportPdf } from "../application/reports/studentReportPdf.js";
 
@@ -62,6 +64,40 @@ app.post("/api/estudiantes", async (req, res) => {
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
       res.status(409).json({ status: "error", message: "El expediente ya existe." });
+      return;
+    }
+
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+});
+
+app.get("/api/estudiantes/:expediente/edicion", async (req, res) => {
+  try {
+    const student = await getEditableStudentByExpediente(req.params.expediente);
+    if (!student) {
+      res.status(404).json({ status: "error", message: "Estudiante no encontrado." });
+      return;
+    }
+
+    res.json({ status: "ok", student });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+});
+
+app.put("/api/estudiantes/:expediente", async (req, res) => {
+  try {
+    const updated = await updateStudent(req.params.expediente, req.body || {});
+    res.json({ status: "ok", student: updated });
+  } catch (error) {
+    if (error.message === "Estudiante no encontrado.") {
+      res.status(404).json({ status: "error", message: error.message });
       return;
     }
 

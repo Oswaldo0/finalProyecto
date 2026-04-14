@@ -52,10 +52,7 @@ export function DataTable({ rows = [] }) {
                 <td
                   colSpan={TABLE_HEADERS.length}
                   className="border border-slate-200 px-3 py-3 text-center text-slate-500"
-                >
-                  Sin datos por mostrar. Aqui se visualizaran los registros del
-                  backend.
-                </td>
+                ></td>
               </tr>
             )}
           </tbody>

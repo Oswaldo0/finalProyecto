@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 
-export function StudentDataViewer({ refreshToken = 0 }) {
+export function StudentDataViewer({
+  refreshToken = 0,
+  selectedExpediente = "",
+  onSelectStudent,
+}) {
   const [data, setData] = useState({ columns: [], rows: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,8 +50,9 @@ export function StudentDataViewer({ refreshToken = 0 }) {
     <div className="flex h-full min-h-[320px] flex-col">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Datos de estudiantes</h3>
-          <p className="mt-1 text-sm text-slate-600">Visualizador con nombres fieles de columnas de la tabla estudiante.</p>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Datos de estudiantes
+          </h3>
         </div>
       </div>
 
@@ -65,7 +70,10 @@ export function StudentDataViewer({ refreshToken = 0 }) {
             <thead className="bg-slate-100">
               <tr>
                 {displayColumns.map((column) => (
-                  <th key={column} className="border-b border-slate-200 px-3 py-2 text-left font-semibold text-slate-700">
+                  <th
+                    key={column}
+                    className="border-b border-slate-200 px-3 py-2 text-left font-semibold text-slate-700"
+                  >
                     {column}
                   </th>
                 ))}
@@ -74,15 +82,29 @@ export function StudentDataViewer({ refreshToken = 0 }) {
             <tbody>
               {data.rows.length === 0 ? (
                 <tr>
-                  <td colSpan={Math.max(displayColumns.length, 1)} className="px-3 py-6 text-center text-slate-500">
+                  <td
+                    colSpan={Math.max(displayColumns.length, 1)}
+                    className="px-3 py-6 text-center text-slate-500"
+                  >
                     No hay registros en la tabla estudiante.
                   </td>
                 </tr>
               ) : (
                 data.rows.map((row, index) => (
-                  <tr key={`${row.expediente || "row"}-${index}`} className="odd:bg-white even:bg-slate-50">
+                  <tr
+                    key={`${row.expediente || "row"}-${index}`}
+                    className={`cursor-pointer odd:bg-white even:bg-slate-50 ${
+                      selectedExpediente && row.expediente === selectedExpediente
+                        ? "bg-blue-100"
+                        : ""
+                    }`}
+                    onClick={() => onSelectStudent?.(row.expediente)}
+                  >
                     {data.columns.map((column) => (
-                      <td key={`${index}-${column}`} className="border-t border-slate-200 px-3 py-2 align-top text-slate-700">
+                      <td
+                        key={`${index}-${column}`}
+                        className="border-t border-slate-200 px-3 py-2 align-top text-slate-700"
+                      >
                         {row[column] === null ? "NULL" : String(row[column])}
                       </td>
                     ))}
@@ -90,7 +112,13 @@ export function StudentDataViewer({ refreshToken = 0 }) {
                       <button
                         type="button"
                         className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
-                        onClick={() => window.open(`/api/estudiantes/${row.expediente}/reporte`, "_blank", "noopener,noreferrer")}
+                        onClick={() =>
+                          window.open(
+                            `/api/estudiantes/${row.expediente}/reporte`,
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
+                        }
                       >
                         Visualizar reporte
                       </button>

@@ -1,18 +1,26 @@
 import { NavLink } from "react-router-dom";
 import { navRoutes } from "../routes.js";
+import logo from "../../assets/images/LOGO_USO.png";
 
-const USER_MENU_ITEMS = ["Usuario", "Modulos mantenimiento", "Modo coordinador", "Salir"];
+const USER_MENU_ITEMS = [
+  "Usuario",
+  "Modulos mantenimiento",
+  "Modo coordinador",
+  "Salir",
+];
 
 export function AppHeader() {
   return (
     <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-3 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center">
         <div className="min-w-0 text-center lg:text-left">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Plataforma Academica</p>
-          <h1 className="text-base font-bold text-slate-800 sm:text-lg">Panel de Gestion</h1>
+          <img src={logo} alt="universidad_sonsonate" className="h-12 w-auto" />
         </div>
 
-        <nav aria-label="Navegacion principal" className="flex flex-wrap items-center justify-center gap-2">
+        <nav
+          aria-label="Navegacion principal"
+          className="flex flex-wrap items-center justify-center gap-2"
+        >
           {navRoutes.map((item) => (
             <NavLink
               key={item.path}
@@ -38,7 +46,10 @@ export function AppHeader() {
               <ul className="flex flex-col gap-1" aria-label="Menu de usuario">
                 {USER_MENU_ITEMS.map((item) => (
                   <li key={item}>
-                    <a className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100" href="#">
+                    <a
+                      className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      href="#"
+                    >
                       {item}
                     </a>
                   </li>
