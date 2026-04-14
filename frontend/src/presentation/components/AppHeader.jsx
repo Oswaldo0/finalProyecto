@@ -1,15 +1,22 @@
-import { NavLink } from "react-router-dom";
-import { navRoutes } from "../routes.js";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink } from "react-router-dom";
+import { navRoutes, userMenuRoutes } from "../routes.js";
 import logo from "../../assets/images/LOGO_USO.png";
 
-const USER_MENU_ITEMS = [
-  "Usuario",
-  "Modulos mantenimiento",
-  "Modo coordinador",
-  "Salir",
-];
-
 export function AppHeader() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-3 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center">
@@ -37,26 +44,34 @@ export function AppHeader() {
         </nav>
 
         <div className="flex justify-center lg:justify-end">
-          <details className="group relative">
-            <summary className="list-none rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
+              aria-haspopup="true"
+              aria-expanded={menuOpen}
+            >
               Usuario
-            </summary>
+            </button>
 
-            <div className="mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg lg:absolute lg:right-0 lg:mt-3">
-              <ul className="flex flex-col gap-1" aria-label="Menu de usuario">
-                {USER_MENU_ITEMS.map((item) => (
-                  <li key={item}>
-                    <a
-                      className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                      href="#"
-                    >
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </details>
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                <ul className="flex flex-col gap-1" aria-label="Menu de usuario">
+                  {userMenuRoutes.map((item) => (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        onClick={() => setMenuOpen(false)}
+                        className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

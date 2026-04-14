@@ -1,7 +1,7 @@
 import { AppHeader } from "./components/AppHeader.jsx";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { BlankPage } from "./pages/BlankPage.jsx";
-import { navRoutes } from "./routes.js";
+import { navRoutes, userMenuRoutes } from "./routes.js";
 
 export function App() {
   return (
@@ -11,6 +11,13 @@ export function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
         {navRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={<BlankPage title={route.label} />}
+          />
+        ))}
+        {userMenuRoutes.map((route) => (
           <Route
             key={route.path}
             path={route.path}

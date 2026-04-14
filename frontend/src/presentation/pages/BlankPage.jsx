@@ -4,10 +4,16 @@ import { StudentDataViewer } from "../components/StudentDataViewer.jsx";
 
 export function BlankPage({ title }) {
   const usesMainLayout =
-    title === "Inicio" || title === "Estudiantes" || title === "Facultades";
+    title === "Inicio" || title === "Estudiantes" || title === "Facultades" || title === "Planeación" || title === "Solicitudes";
   const isHomePage = title === "Inicio";
   const isStudentsPage = title === "Estudiantes";
   const isFacultiesPage = title === "Facultades";
+  const isPlanningPage = title === "Planeación";
+  const isRequestsPage = title === "Solicitudes";
+  const isReportsPage = title === "Reportes";
+  const [activePlanningAction, setActivePlanningAction] = useState(null);
+  const [activeRequest, setActiveRequest] = useState("Pendientes");
+  const [activeReport, setActiveReport] = useState("Visualizar");
   const [showStudentLogin, setShowStudentLogin] = useState(false);
   const [studentActionsUnlocked, setStudentActionsUnlocked] = useState(false);
   const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
@@ -32,9 +38,71 @@ export function BlankPage({ title }) {
         }`}
       >
         {usesMainLayout ? (
+          isRequestsPage ? (
+            <div className="flex h-full flex-col gap-4 lg:flex-row">
+              {/* Columna izquierda */}
+              <article className="w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:w-[340px] lg:shrink-0">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Filtro</h3>
+                <form className="mt-4 grid gap-3" aria-label="Filtros de solicitudes">
+                  <label className="grid gap-1 text-sm">
+                    <span className="font-medium text-slate-700">Facultad</span>
+                    <select className="rounded-lg border border-slate-300 px-3 py-2 text-slate-700 outline-none focus:border-slate-500">
+                      <option value="">Seleccione facultad</option>
+                    </select>
+                  </label>
+                  <label className="grid gap-1 text-sm">
+                    <span className="font-medium text-slate-700">Materias</span>
+                    <select className="rounded-lg border border-slate-300 px-3 py-2 text-slate-700 outline-none focus:border-slate-500">
+                      <option value="">Seleccione materia</option>
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    className="mt-1 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                  >
+                    Aceptar
+                  </button>
+                </form>
+              </article>
+
+              {/* Columna derecha: dos filas */}
+              <div className="flex flex-1 flex-col gap-4">
+                {/* Fila superior: botones */}
+                <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex gap-3">
+                    {["Pendientes", "Resueltas"].map((tab) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setActiveRequest(tab)}
+                        className={`rounded-lg border px-5 py-2 text-sm font-semibold transition ${
+                          activeRequest === tab
+                            ? "border-slate-900 bg-slate-900 text-white hover:bg-slate-700"
+                            : "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                </article>
+
+                {/* Fila inferior: contenido */}
+                <article className="flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                    {activeRequest === "Pendientes"
+                      ? "Listado de solicitudes pendientes."
+                      : "Listado de solicitudes resueltas."}
+                  </div>
+                </article>
+              </div>
+            </div>
+          ) : (
           <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-[340px_minmax(0,_1fr)] lg:grid-rows-[minmax(110px,_auto)_minmax(0,_1fr)]">
             <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
-              <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
+              {!isReportsPage ? (
+                <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
+              ) : null}
               {isStudentsPage ? (
                 <>
                   <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -92,6 +160,27 @@ export function BlankPage({ title }) {
                     </button>
                   ))}
                 </div>
+              ) : isPlanningPage ? (
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {["Crear grupos", "Crear horarios", "Crear Laboratorio"].map((action) => (
+                    <button
+                      key={action}
+                      type="button"
+                      onClick={() =>
+                        setActivePlanningAction((prev) =>
+                          prev === action ? null : action
+                        )
+                      }
+                      className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
+                        activePlanningAction === action
+                          ? "border-slate-900 bg-slate-900 text-white hover:bg-slate-700"
+                          : "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
+                      }`}
+                    >
+                      {action}
+                    </button>
+                  ))}
+                </div>
               ) : (
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <button
@@ -116,7 +205,7 @@ export function BlankPage({ title }) {
               )}
             </article>
 
-            {!isHomePage ? (
+            {!isHomePage && !isPlanningPage ? (
               <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                   Filtro
@@ -154,7 +243,7 @@ export function BlankPage({ title }) {
 
             <article
               className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${
-                isHomePage ? "lg:col-span-2" : ""
+                isHomePage || isPlanningPage ? "lg:col-span-2" : ""
               }`}
             >
               {isStudentsPage ? (
@@ -173,11 +262,62 @@ export function BlankPage({ title }) {
                     mantenimiento de facultades.
                   </div>
                 </div>
+              ) : isPlanningPage ? (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                    {activePlanningAction ?? "Planeación"}
+                  </h3>
+                  <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                    {activePlanningAction
+                      ? `Sección de "${activePlanningAction}" lista para integrarse.`
+                      : "Seleccione una acción para continuar."}
+                  </div>
+                </div>
               ) : (
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                   Division vertical 2
                 </h3>
               )}
+            </article>
+          </div>
+          )
+        ) : isReportsPage ? (
+          <div className="flex h-full flex-col gap-4">
+            {/* Fila superior: botones */}
+            <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveReport("Visualizar")}
+                  className={`rounded-lg border px-5 py-2 text-sm font-semibold transition ${
+                    activeReport === "Visualizar"
+                      ? "border-slate-900 bg-slate-900 text-white hover:bg-slate-700"
+                      : "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
+                  }`}
+                >
+                  Visualizar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveReport("Crear reportes")}
+                  className={`rounded-lg border px-5 py-2 text-sm font-semibold transition ${
+                    activeReport === "Crear reportes"
+                      ? "border-slate-900 bg-slate-900 text-white hover:bg-slate-700"
+                      : "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
+                  }`}
+                >
+                  Crear reportes
+                </button>
+              </div>
+            </article>
+
+            {/* Fila inferior: contenido */}
+            <article className="flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                {activeReport === "Visualizar"
+                  ? "Sección para visualizar reportes."
+                  : "Sección para crear reportes."}
+              </div>
             </article>
           </div>
         ) : (
