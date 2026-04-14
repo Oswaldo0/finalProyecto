@@ -1,0 +1,19 @@
+import { AppHeader } from "./components/AppHeader.jsx";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { BlankPage } from "./pages/BlankPage.jsx";
+import { navRoutes } from "./routes.js";
+
+export function App() {
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#f8fafc_38%,_#f8fafc_100%)] text-slate-800">
+      <AppHeader />
+
+      <Routes>
+        <Route path="/" element={<Navigate to="/inicio" replace />} />
+        {navRoutes.map((route) => (
+          <Route key={route.path} path={route.path} element={<BlankPage title={route.label} />} />
+        ))}
+      </Routes>
+    </div>
+  );
+}
