@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { StudentCreateModal } from "../components/StudentCreateModal.jsx";
 import { StudentDataViewer } from "../components/StudentDataViewer.jsx";
+import { deleteStudentUseCase } from "../../application/students/studentUseCases.js";
 
 export function BlankPage({ title }) {
   const usesMainLayout =
@@ -8,12 +9,14 @@ export function BlankPage({ title }) {
     title === "Estudiantes" ||
     title === "Facultades" ||
     title === "Planeación" ||
-    title === "Solicitudes";
+    title === "Solicitudes" ||
+    title === "Modo coordinador";
   const isHomePage = title === "Inicio";
   const isStudentsPage = title === "Estudiantes";
   const isFacultiesPage = title === "Facultades";
   const isPlanningPage = title === "Planeación";
   const isRequestsPage = title === "Solicitudes";
+  const isCoordinatorPage = title === "Modo coordinador";
   const isReportsPage = title === "Reportes";
   const [activePlanningAction, setActivePlanningAction] = useState(null);
   const [activeRequest, setActiveRequest] = useState("Pendientes");
@@ -30,6 +33,25 @@ export function BlankPage({ title }) {
     event.preventDefault();
     setStudentActionsUnlocked(true);
     setShowStudentLogin(false);
+  }
+
+  async function handleDeleteStudent() {
+    if (!selectedStudentExpediente) return;
+
+    const confirmed = window.confirm(
+      `Confirma que desea inactivar al estudiante ${selectedStudentExpediente}?`,
+    );
+    if (!confirmed) return;
+
+    try {
+      const result = await deleteStudentUseCase(selectedStudentExpediente);
+
+      setStudentViewerRefreshToken((value) => value + 1);
+      setSelectedStudentExpediente("");
+      window.alert(result.message || "Estudiante inactivado correctamente.");
+    } catch (error) {
+      window.alert(error.message || "No se pudo eliminar el estudiante.");
+    }
   }
 
   return (
@@ -132,7 +154,7 @@ export function BlankPage({ title }) {
                             type="button"
                             disabled={
                               !studentActionsUnlocked ||
-                              (action === "Actualizar" &&
+                              ((action === "Actualizar" || action === "Eliminar") &&
                                 !selectedStudentExpediente)
                             }
                             onClick={() => {
@@ -146,12 +168,20 @@ export function BlankPage({ title }) {
                                 selectedStudentExpediente
                               ) {
                                 setShowEditStudentModal(true);
+                                return;
+                              }
+
+                              if (
+                                action === "Eliminar" &&
+                                selectedStudentExpediente
+                              ) {
+                                handleDeleteStudent();
                               }
                             }}
                             className={`rounded-lg border px-4 py-2 text-sm font-semibold transition ${
                               studentActionsUnlocked &&
                               !(
-                                action === "Actualizar" &&
+                                (action === "Actualizar" || action === "Eliminar") &&
                                 !selectedStudentExpediente
                               )
                                 ? "border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100"
@@ -203,29 +233,23 @@ export function BlankPage({ title }) {
                   </div>
                 ) : (
                   <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-                    >
-                      Horario de Clases
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-                    >
-                      Calendario
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-                    >
-                      Grupos
-                    </button>
+                    {(isCoordinatorPage
+                      ? ["Catedrático", "Facultad", "Plan de estudio"]
+                      : ["Horario de Clases", "Calendario", "Grupos"]
+                    ).map((action) => (
+                      <button
+                        key={action}
+                        type="button"
+                        className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+                      >
+                        {action}
+                      </button>
+                    ))}
                   </div>
                 )}
               </article>
 
-              {!isHomePage && !isPlanningPage ? (
+              {!isHomePage && !isPlanningPage && !isCoordinatorPage ? (
                 <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                   <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                     Filtro
@@ -267,7 +291,9 @@ export function BlankPage({ title }) {
 
               <article
                 className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${
-                  isHomePage || isPlanningPage ? "lg:col-span-2" : ""
+                  isHomePage || isPlanningPage || isCoordinatorPage
+                    ? "lg:col-span-2"
+                    : ""
                 }`}
               >
                 {isStudentsPage ? (

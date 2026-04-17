@@ -13,3 +13,7 @@ export const userMenuRoutes = [
   { label: "Modo coordinador", path: "/modo-coordinador" },
   { label: "Salir", path: "/salir" },
 ];
+
+export const routeLabels = Object.fromEntries(
+  [...navRoutes, ...userMenuRoutes].map((r) => [r.path, r.label])
+);

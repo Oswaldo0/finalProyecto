@@ -1,15 +1,23 @@
 import express from "express";
 import "dotenv/config";
-import { checkDatabaseConnection, closeDatabasePool } from "../infrastructure/database/mysql.js";
 import {
-  createStudent,
-  getEditableStudentByExpediente,
-  getStudentByExpediente,
-  getStudentFormOptions,
-  getStudentsWithSchema,
-  updateStudent,
-} from "../infrastructure/repositories/studentRepository.js";
-import { buildStudentReportPdf } from "../application/reports/studentReportPdf.js";
+  checkDatabaseConnectionUseCase,
+  closeDatabasePoolUseCase,
+} from "../application/system/systemUseCases.js";
+import {
+  buildStudentReportUseCase,
+  createStudentUseCase,
+  deleteStudentUseCase,
+  getEditableStudent,
+  getStudentOptions,
+  listStudents,
+  updateStudentUseCase,
+} from "../application/students/studentUseCases.js";
+import {
+  createUserUseCase,
+  getUserOptions,
+  listUsers,
+} from "../application/users/userUseCases.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,7 +30,7 @@ app.get("/health", (_req, res) => {
 
 app.get("/health/db", async (_req, res) => {
   try {
-    const result = await checkDatabaseConnection();
+    const result = await checkDatabaseConnectionUseCase();
     res.json({ status: "ok", database: result });
   } catch (error) {
     res.status(500).json({
@@ -35,7 +43,7 @@ app.get("/health/db", async (_req, res) => {
 app.get("/api/estudiantes", async (req, res) => {
   try {
     const limit = Number(req.query.limit || 50);
-    const result = await getStudentsWithSchema(limit);
+    const result = await listStudents(limit);
     res.json(result);
   } catch (error) {
     res.status(500).json({
@@ -47,7 +55,7 @@ app.get("/api/estudiantes", async (req, res) => {
 
 app.get("/api/estudiantes/form-options", async (_req, res) => {
   try {
-    const options = await getStudentFormOptions();
+    const options = await getStudentOptions();
     res.json(options);
   } catch (error) {
     res.status(500).json({
@@ -59,7 +67,7 @@ app.get("/api/estudiantes/form-options", async (_req, res) => {
 
 app.post("/api/estudiantes", async (req, res) => {
   try {
-    const created = await createStudent(req.body || {});
+    const created = await createStudentUseCase(req.body || {});
     res.status(201).json({ status: "ok", student: created });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
@@ -76,7 +84,7 @@ app.post("/api/estudiantes", async (req, res) => {
 
 app.get("/api/estudiantes/:expediente/edicion", async (req, res) => {
   try {
-    const student = await getEditableStudentByExpediente(req.params.expediente);
+    const student = await getEditableStudent(req.params.expediente);
     if (!student) {
       res.status(404).json({ status: "error", message: "Estudiante no encontrado." });
       return;
@@ -93,7 +101,7 @@ app.get("/api/estudiantes/:expediente/edicion", async (req, res) => {
 
 app.put("/api/estudiantes/:expediente", async (req, res) => {
   try {
-    const updated = await updateStudent(req.params.expediente, req.body || {});
+    const updated = await updateStudentUseCase(req.params.expediente, req.body || {});
     res.json({ status: "ok", student: updated });
   } catch (error) {
     if (error.message === "Estudiante no encontrado.") {
@@ -108,16 +116,37 @@ app.put("/api/estudiantes/:expediente", async (req, res) => {
   }
 });
 
+app.delete("/api/estudiantes/:expediente", async (req, res) => {
+  try {
+    const deleted = await deleteStudentUseCase(req.params.expediente);
+    res.json({ status: "ok", student: deleted, message: "Estudiante inactivado correctamente." });
+  } catch (error) {
+    if (error.message === "Estudiante no encontrado.") {
+      res.status(404).json({ status: "error", message: error.message });
+      return;
+    }
+
+    if (error.message === "El estudiante ya está inactivo.") {
+      res.status(409).json({ status: "error", message: error.message });
+      return;
+    }
+
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+});
+
 app.get("/api/estudiantes/:expediente/reporte", async (req, res) => {
   try {
-    const student = await getStudentByExpediente(req.params.expediente);
-
-    if (!student) {
+    const result = await buildStudentReportUseCase(req.params.expediente);
+    if (!result) {
       res.status(404).json({ status: "error", message: "Estudiante no encontrado." });
       return;
     }
 
-    const pdf = buildStudentReportPdf(student);
+    const { student, pdf } = result;
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="reporte-${student.expediente}.pdf"`);
     pdf.pipe(res);
@@ -129,11 +158,50 @@ app.get("/api/estudiantes/:expediente/reporte", async (req, res) => {
   }
 });
 
+app.get("/api/usuarios/form-options", async (_req, res) => {
+  try {
+    const options = await getUserOptions();
+    res.json(options);
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+app.get("/api/usuarios", async (req, res) => {
+  try {
+    const limit = Number(req.query.limit || 50);
+    const result = await listUsers(limit);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+app.post("/api/usuarios", async (req, res) => {
+  try {
+    const user = await createUserUseCase(req.body || {});
+    res.status(201).json({ status: "ok", user });
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY") {
+      const isDuplicateUser = error.message.includes("USERNAME");
+      const isDuplicateEmail = error.message.includes("CORREO");
+      const msg = isDuplicateUser
+        ? "El nombre de usuario ya existe."
+        : isDuplicateEmail
+          ? "El correo ya está registrado."
+          : "Ya existe un registro duplicado.";
+      res.status(409).json({ status: "error", message: msg });
+      return;
+    }
+    res.status(400).json({ status: "error", message: error.message });
+  }
+});
+
 const server = app.listen(port, async () => {
   console.log(`Backend escuchando en puerto ${port}`);
 
   try {
-    const result = await checkDatabaseConnection();
+    const result = await checkDatabaseConnectionUseCase();
     console.log(`Conectado a ${result.database} en ${result.server}`);
   } catch (error) {
     console.warn(`No se pudo conectar a la base de datos: ${error.message}`);
@@ -141,7 +209,7 @@ const server = app.listen(port, async () => {
 });
 
 async function shutdown() {
-  await closeDatabasePool();
+  await closeDatabasePoolUseCase();
   server.close(() => process.exit(0));
 }
 

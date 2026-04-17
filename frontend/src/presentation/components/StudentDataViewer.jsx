@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { listStudents } from "../../application/students/studentUseCases.js";
 
 export function StudentDataViewer({
   refreshToken = 0,
@@ -17,12 +18,7 @@ export function StudentDataViewer({
         setLoading(true);
         setError("");
 
-        const response = await fetch("/api/estudiantes?limit=25");
-        if (!response.ok) {
-          throw new Error("No se pudieron cargar los estudiantes.");
-        }
-
-        const result = await response.json();
+        const result = await listStudents(25);
         if (!cancelled) {
           setData({ columns: result.columns || [], rows: result.rows || [] });
         }
@@ -44,7 +40,26 @@ export function StudentDataViewer({
     };
   }, [refreshToken]);
 
-  const displayColumns = [...data.columns, "acciones"];
+  const displayColumns = [...data.columns];
+
+  function formatColumnLabel(column) {
+    const normalized = String(column || "").toLowerCase();
+
+    if (normalized === "year_ingreso") return "FECHA DE INGRESO";
+    if (normalized === "plan_estudio") return "PLAN DE ESTUDIO";
+
+    return String(column || "").replaceAll("_", " ").toUpperCase();
+  }
+
+  function handleOpenSelectedReport() {
+    if (!selectedExpediente) return;
+
+    window.open(
+      `/api/estudiantes/${selectedExpediente}/reporte`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
 
   return (
     <div className="flex h-full min-h-[320px] flex-col">
@@ -53,7 +68,25 @@ export function StudentDataViewer({
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             Datos de estudiantes
           </h3>
+          <p className="mt-1 text-xs text-slate-500">
+            {selectedExpediente
+              ? `Expediente seleccionado: ${selectedExpediente}`
+              : "Seleccione una fila para habilitar el reporte."}
+          </p>
         </div>
+
+        <button
+          type="button"
+          disabled={!selectedExpediente}
+          onClick={handleOpenSelectedReport}
+          className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${
+            selectedExpediente
+              ? "bg-slate-900 text-white hover:bg-slate-700"
+              : "cursor-not-allowed bg-slate-200 text-slate-500"
+          }`}
+        >
+          Visualizar reporte seleccionado
+        </button>
       </div>
 
       {loading ? (
@@ -74,7 +107,7 @@ export function StudentDataViewer({
                     key={column}
                     className="border-b border-slate-200 px-3 py-2 text-left font-semibold text-slate-700"
                   >
-                    {column}
+                    {formatColumnLabel(column)}
                   </th>
                 ))}
               </tr>
@@ -108,21 +141,6 @@ export function StudentDataViewer({
                         {row[column] === null ? "NULL" : String(row[column])}
                       </td>
                     ))}
-                    <td className="border-t border-slate-200 px-3 py-2 align-top text-slate-700">
-                      <button
-                        type="button"
-                        className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
-                        onClick={() =>
-                          window.open(
-                            `/api/estudiantes/${row.expediente}/reporte`,
-                            "_blank",
-                            "noopener,noreferrer",
-                          )
-                        }
-                      >
-                        Visualizar reporte
-                      </button>
-                    </td>
                   </tr>
                 ))
               )}
