@@ -29,7 +29,11 @@ function drawHeader(document, student) {
     .fillAndStroke("#f8fafc", "#cbd5e1");
 
   if (fs.existsSync(logoPath)) {
-    document.image(logoPath, startX + 16, 56, { width: 64 });
+    try {
+      document.image(logoPath, startX + 16, 56, { width: 64 });
+    } catch (logoError) {
+      console.error("Error al cargar logo:", logoError.message);
+    }
   }
 
   document
@@ -100,6 +104,5 @@ export function buildStudentReportPdf(student) {
       align: "center",
     });
 
-  document.end();
   return document;
 }

@@ -2,6 +2,7 @@ import { AppHeader } from "./components/AppHeader.jsx";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { BlankPage } from "./pages/BlankPage.jsx";
 import { UserPage } from "./pages/UserPage.jsx";
+import { CatedraticPage } from "./pages/CatedraticPage.jsx";
 import { navRoutes, routeLabels, userMenuRoutes } from "./routes.js";
 
 function RouteBreadcrumb() {
@@ -37,6 +38,8 @@ export function App() {
         {userMenuRoutes.map((route) =>
           route.path === "/usuario" ? (
             <Route key={route.path} path={route.path} element={<UserPage />} />
+          ) : route.path === "/modulos-mantenimiento" ? (
+            <Route key={route.path} path={route.path} element={<CatedraticPage />} />
           ) : (
             <Route
               key={route.path}

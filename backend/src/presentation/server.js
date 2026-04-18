@@ -18,6 +18,22 @@ import {
   getUserOptions,
   listUsers,
 } from "../application/users/userUseCases.js";
+import { listWeeklyScheduleUseCase } from "../application/schedules/scheduleUseCases.js";
+import {
+  createGroupUseCase,
+  getGroupFormOptions,
+  listGroups,
+} from "../application/groups/groupUseCases.js";
+import {
+  createCatedraticUseCase,
+  getCatedraticOptions,
+  listCatedraticos,
+} from "../application/catedraticos/catedraticUseCases.js";
+import {
+  createHorarioUseCase,
+  getHorarioFormOptionsUseCase,
+  listHorariosUseCase,
+} from "../application/horarios/horarioUseCases.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -150,6 +166,7 @@ app.get("/api/estudiantes/:expediente/reporte", async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="reporte-${student.expediente}.pdf"`);
     pdf.pipe(res);
+    pdf.end();
   } catch (error) {
     res.status(500).json({
       status: "error",
@@ -194,6 +211,105 @@ app.post("/api/usuarios", async (req, res) => {
       return;
     }
     res.status(400).json({ status: "error", message: error.message });
+  }
+});
+
+app.get("/api/horarios/semana", async (_req, res) => {
+  try {
+    const result = await listWeeklyScheduleUseCase();
+    res.json({ status: "ok", ...result });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+app.get("/api/grupos/opciones-formulario", async (_req, res) => {
+  try {
+    const options = await getGroupFormOptions();
+    res.json({ status: "ok", ...options });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+app.post("/api/grupos", async (req, res) => {
+  try {
+    const result = await createGroupUseCase(req.body);
+    res.status(201).json({ status: "ok", ...result });
+  } catch (error) {
+    if (error.message.includes("ya existe")) {
+      res.status(409).json({ status: "error", message: error.message });
+      return;
+    }
+    res.status(400).json({ status: "error", message: error.message });
+  }
+});
+
+app.get("/api/grupos", async (_req, res) => {
+  try {
+    const groups = await listGroups();
+    res.json({ status: "ok", groups });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+app.get("/api/catedraticos/form-options", async (_req, res) => {
+  try {
+    const options = await getCatedraticOptions();
+    res.json({ status: "ok", ...options });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+app.post("/api/catedraticos", async (req, res) => {
+  try {
+    const result = await createCatedraticUseCase(req.body);
+    res.status(201).json({ status: "ok", catedratic: result, message: result.message });
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || error.message.includes("Ya existe")) {
+      res.status(409).json({ status: "error", message: error.message });
+      return;
+    }
+    res.status(400).json({ status: "error", message: error.message });
+  }
+});
+
+app.get("/api/catedraticos", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const result = await listCatedraticos(limit);
+    res.json({ status: "ok", ...result });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+app.get("/api/horarios/form-options", async (_req, res) => {
+  try {
+    const options = await getHorarioFormOptionsUseCase();
+    res.json({ status: "ok", ...options });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+app.post("/api/horarios", async (req, res) => {
+  try {
+    const result = await createHorarioUseCase(req.body);
+    res.status(201).json({ status: "ok", ...result });
+  } catch (error) {
+    res.status(400).json({ status: "error", message: error.message });
+  }
+});
+
+app.get("/api/horarios", async (_req, res) => {
+  try {
+    const rows = await listHorariosUseCase();
+    res.json({ status: "ok", horarios: rows });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
   }
 });
 
