@@ -40,7 +40,6 @@ export function StudentCreateModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Municipios filtrados según departamento seleccionado
   const filteredMunicipios = useMemo(() => {
     if (!form.id_departamento) return [];
     return options.municipios.filter(
@@ -137,7 +136,6 @@ export function StudentCreateModal({
           </p>
         ) : null}
 
-        {/* Secci�n: Datos acad�micos */}
         <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Datos acad�micos
         </p>
@@ -193,7 +191,6 @@ export function StudentCreateModal({
           />
         </div>
 
-        {/* Secci�n: Datos personales */}
         <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Datos personales
         </p>

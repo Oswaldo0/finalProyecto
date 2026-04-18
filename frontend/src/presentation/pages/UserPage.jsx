@@ -26,14 +26,12 @@ export function UserPage() {
   const [showUsers, setShowUsers] = useState(false);
   const [options, setOptions] = useState({ departamentos: [], municipios: [] });
 
-  // Carga opciones al montar el componente
   useEffect(() => {
     getUserFormOptions()
       .then((data) => setOptions(data))
       .catch(() => {});
   }, []);
 
-  // Municipios filtrados según el departamento seleccionado
   const filteredMunicipios = useMemo(() => {
     if (!form.id_departamento) return [];
     return options.municipios.filter(
@@ -43,7 +41,6 @@ export function UserPage() {
 
   function handleChange(e) {
     const { name, value } = e.target;
-    // Al cambiar departamento, resetear municipio
     if (name === "id_departamento") {
       setForm((prev) => ({ ...prev, id_departamento: value, id_municipio: "" }));
       return;
@@ -96,7 +93,6 @@ export function UserPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-800">Gestión de usuarios</h1>
@@ -114,7 +110,6 @@ export function UserPage() {
         </button>
       </div>
 
-      {/* Feedback banner */}
       {feedback && (
         <div
           className={`mb-5 rounded-lg border px-4 py-3 text-sm font-medium ${
@@ -128,7 +123,6 @@ export function UserPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* --- Create form --- */}
         <form
           onSubmit={handleSubmit}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
@@ -194,7 +188,6 @@ export function UserPage() {
             </label>
           </div>
 
-          {/* Sección dirección */}
           <h2 className="mb-3 mt-6 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Dirección
           </h2>
@@ -310,7 +303,6 @@ export function UserPage() {
           </div>
         </form>
 
-        {/* --- User list panel --- */}
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Usuarios registrados

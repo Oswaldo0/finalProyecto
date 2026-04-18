@@ -1,6 +1,4 @@
 import { getDatabasePool } from "../database/mysql.js";
-
-// --- SELECT base ---------------------------------------------------------------
 const studentSelect = `
   SELECT
     e.EXPEDIENTE   AS expediente,
@@ -46,7 +44,6 @@ const studentColumns = [
   "estado",
 ];
 
-// --- Utilidades ----------------------------------------------------------------
 function toNullable(value) {
   if (value === undefined || value === null || value === "") return null;
   return value;
@@ -64,7 +61,6 @@ function validateCum(value) {
   if (parsed < 0) throw new Error("El campo cum no permite valores negativos.");
 }
 
-// --- Consultas ----------------------------------------------------------------
 export async function getStudentsWithSchema(limit = 50) {
   const pool = getDatabasePool();
   const [rows] = await pool.query(
@@ -132,7 +128,6 @@ export async function getStudentFormOptions() {
   return { departamentos, municipios, carreras, facultades, ciclos, planes };
 }
 
-// --- Escritura -----------------------------------------------------------------
 export async function createStudent(payload) {
   const pool = getDatabasePool();
 
@@ -149,7 +144,6 @@ export async function createStudent(payload) {
   try {
     await connection.beginTransaction();
 
-    // Dirección (opcional)
     let dirId = null;
     if (payload.id_departamento && payload.id_municipio) {
       const [dirResult] = await connection.query(
@@ -219,7 +213,6 @@ export async function updateStudent(expediente, payload) {
 
     const personaId = existing[0].ID_PERSO;
 
-    // Dirección (opcional)
     let dirId = null;
     if (payload.id_departamento && payload.id_municipio) {
       const [dirResult] = await connection.query(

@@ -95,7 +95,6 @@ export function CatedraticPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-800">Gestión de catedráticos</h1>
@@ -113,7 +112,6 @@ export function CatedraticPage() {
         </button>
       </div>
 
-      {/* Feedback */}
       {feedback && (
         <div
           className={`mb-5 rounded-lg border px-4 py-3 text-sm font-medium ${
@@ -127,7 +125,6 @@ export function CatedraticPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Formulario */}
         <form
           onSubmit={handleSubmit}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
@@ -193,7 +190,6 @@ export function CatedraticPage() {
             </label>
           </div>
 
-          {/* Facultad */}
           <h2 className="mb-3 mt-6 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Datos académicos
           </h2>
@@ -229,7 +225,6 @@ export function CatedraticPage() {
             </label>
           </div>
 
-          {/* Dirección */}
           <h2 className="mb-3 mt-6 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Dirección
           </h2>
@@ -303,7 +298,6 @@ export function CatedraticPage() {
           </div>
         </form>
 
-        {/* Lista de catedráticos */}
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Catedráticos registrados

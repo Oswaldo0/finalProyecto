@@ -38,7 +38,6 @@ function toNullable(value) {
   return value;
 }
 
-// --- Consultas ---------------------------------------------------------------
 export async function getCatedraticosWithSchema(limit = 50) {
   const pool = getDatabasePool();
   const [rows] = await pool.query(
@@ -64,7 +63,6 @@ export async function getCatedraticFormOptions() {
   return { departamentos, municipios, facultades };
 }
 
-// --- Escritura ---------------------------------------------------------------
 export async function createCatedratic(payload) {
   const pool = getDatabasePool();
 
@@ -79,7 +77,6 @@ export async function createCatedratic(payload) {
   try {
     await connection.beginTransaction();
 
-    // Dirección (opcional)
     let dirId = null;
     if (payload.id_departamento && payload.id_municipio) {
       const [dirResult] = await connection.query(
@@ -93,7 +90,6 @@ export async function createCatedratic(payload) {
       dirId = dirResult.insertId;
     }
 
-    // Persona
     const [personaResult] = await connection.query(
       `INSERT INTO persona (NOMBRE, APELLIDO, TELEFONO, CORREO, ID_DIR, ESTADO)
        VALUES (?, ?, ?, ?, ?, 'ACTIVO')`,
@@ -108,7 +104,6 @@ export async function createCatedratic(payload) {
 
     const personaId = personaResult.insertId;
 
-    // Catedrático
     const [catResult] = await connection.query(
       `INSERT INTO catedratico (ID_PERSO, ID_FACU, TIP_CONTRATO) VALUES (?, ?, ?)`,
       [

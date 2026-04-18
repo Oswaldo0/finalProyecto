@@ -127,7 +127,6 @@ export function BlankPage({ title }) {
         {usesMainLayout ? (
           isRequestsPage ? (
             <div className="flex h-full flex-col gap-4 lg:flex-row">
-              {/* Columna izquierda */}
               <article className="w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:w-[340px] lg:shrink-0">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                   Filtro
@@ -157,9 +156,7 @@ export function BlankPage({ title }) {
                 </form>
               </article>
 
-              {/* Columna derecha: dos filas */}
               <div className="flex flex-1 flex-col gap-4">
-                {/* Fila superior: botones */}
                 <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="flex gap-3">
                     <button
@@ -185,7 +182,6 @@ export function BlankPage({ title }) {
                   </div>
                 </article>
 
-                {/* Fila inferior: contenido */}
                 <article className="flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
                     {activeRequest === "Pendientes"
@@ -517,7 +513,6 @@ export function BlankPage({ title }) {
           )
         ) : isReportsPage ? (
           <div className="flex h-full flex-col gap-4">
-            {/* Fila superior: botones */}
             <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex gap-3">
                 <button
@@ -545,7 +540,6 @@ export function BlankPage({ title }) {
               </div>
             </article>
 
-            {/* Fila inferior: contenido */}
             <article className="flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
                 {activeReport === "Visualizar"

@@ -14,13 +14,6 @@ export async function getUserFormOptions() {
   return { departamentos, municipios };
 }
 
-/**
- * Crea un usuario nuevo:
- * 1. (Opcional) Inserta en `direccion` si se proporcionan datos
- * 2. Inserta en `persona` con el ID_DIR resultante
- * 3. Inserta en `usuario` con el ID_PERSO generado
- * Todo en una sola transacción.
- */
 export async function createUser(payload) {
   const required = ["username", "password", "nombre", "apellido"];
   const missing = required.filter((f) => !payload[f]);
@@ -34,7 +27,6 @@ export async function createUser(payload) {
   try {
     await connection.beginTransaction();
 
-    // 1. Dirección (opcional)
     let dirId = null;
     if (payload.id_departamento && payload.id_municipio) {
       const [dirResult] = await connection.query(

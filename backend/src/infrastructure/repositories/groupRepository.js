@@ -1,6 +1,4 @@
 import { getDatabasePool } from "../database/mysql.js";
-
-// --- SELECT bases ---------------------------------------------------------------
 const materiaSelect = `
   SELECT 
     m.ID AS id,
@@ -63,7 +61,6 @@ const groupSelect = `
   LEFT JOIN inscripcion i ON i.ID_GRUP = g.ID
 `;
 
-// --- Obtener opciones de formulario -----------------------------------------------
 export async function getMateriasForForm() {
   const pool = await getDatabasePool();
   const [rows] = await pool.query(materiaSelect);
@@ -88,7 +85,6 @@ export async function getAulasForForm() {
   return rows;
 }
 
-// --- Crear grupo -----------------------------------------------
 export async function createGroup(groupData) {
   const pool = await getDatabasePool();
   
@@ -125,7 +121,6 @@ export async function createGroup(groupData) {
   }
 }
 
-// --- Obtener todos los grupos -----------------------------------------------
 export async function getGroupsWithStats() {
   const pool = await getDatabasePool();
   const query = `${groupSelect}
@@ -138,7 +133,6 @@ export async function getGroupsWithStats() {
   return rows;
 }
 
-// --- Obtener grupo por ID -----------------------------------------------
 export async function getGroupById(groupId) {
   const pool = await getDatabasePool();
   const query = `${groupSelect}

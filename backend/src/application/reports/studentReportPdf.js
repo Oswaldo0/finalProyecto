@@ -23,7 +23,6 @@ function drawHeader(document, student) {
   const contentWidth =
     document.page.width - document.page.margins.left - document.page.margins.right;
 
-  // Tarjeta superior del reporte
   document
     .roundedRect(startX, 40, contentWidth, 95, 10)
     .fillAndStroke("#f8fafc", "#cbd5e1");

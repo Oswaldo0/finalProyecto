@@ -2,7 +2,6 @@ import { getDatabasePool } from "../database/mysql.js";
 
 const DIAS_SEMANA = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
 
-// --- Opciones de formulario ---------------------------------------------------
 export async function getHorarioFormOptions() {
   const pool = getDatabasePool();
 
@@ -22,7 +21,6 @@ export async function getHorarioFormOptions() {
   return { grupos, aulas, dias: DIAS_SEMANA };
 }
 
-// --- Crear horario ------------------------------------------------------------
 export async function createHorario(payload) {
   const pool = getDatabasePool();
 
@@ -63,7 +61,6 @@ export async function createHorario(payload) {
   }
 }
 
-// --- Listar horarios con detalle ---------------------------------------------
 export async function getHorariosWithDetail() {
   const pool = getDatabasePool();
 
