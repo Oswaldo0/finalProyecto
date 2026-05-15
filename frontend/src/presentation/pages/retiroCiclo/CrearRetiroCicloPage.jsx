@@ -1,32 +1,95 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { crearRetiro } from "../../../application/retiroCiclo/retiroCicloUseCases.js";
 
-const MATERIAS_INICIALES = [
-  { nombre: "", uv: "" },
-  { nombre: "", uv: "" },
-  { nombre: "", uv: "" },
-  { nombre: "", uv: "" },
-  { nombre: "", uv: "" },
-];
+const FORMULARIO_INICIAL = {
+  expediente: "",
+  carnet: "",
+  fecha: "",
+  alumnoNombres: "",
+  alumnoApellidos: "",
+  carrera: "",
+  cicloRetirar: "",
+  articuloReferencia: "Artículo 14",
+  textoResolucion:
+    "De acuerdo a su solicitud y en base al artículo 14 del Reglamento de Administración Académica, se autoriza al bachiller, previo al pago del arancel correspondiente, el retiro extraordinario de las asignaturas inscritas en el ciclo indicado.",
+  observacionFinal: "",
+  decanoNombres: "",
+  decanoApellidos: "",
+  facultad: "",
+};
+
+const CAMPOS_MAYUSCULAS = new Set([
+  "alumnoNombres", "alumnoApellidos", "carrera",
+  "decanoNombres", "decanoApellidos", "facultad",
+]);
 
 export function CrearRetiroCicloPage() {
   const navigate = useNavigate();
   const [showCancelNotice, setShowCancelNotice] = useState(false);
-  const [materias, setMaterias] = useState(MATERIAS_INICIALES);
+  const [formulario, setFormulario] = useState(FORMULARIO_INICIAL);
+  const [materias, setMaterias] = useState([{ nombre: "", uv: "" }]);
+  const [guardando, setGuardando] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState("");
+  const [mensajeError, setMensajeError] = useState("");
+
+  function handleInputChange(field, value) {
+    const finalValue = CAMPOS_MAYUSCULAS.has(field) ? value.toUpperCase() : value;
+    setFormulario((prev) => ({ ...prev, [field]: finalValue }));
+  }
 
   function handleMateriaChange(index, field, value) {
     setMaterias((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item,
-      ),
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
     );
+  }
+
+  function agregarMateria() {
+    setMaterias((prev) => [...prev, { nombre: "", uv: "" }]);
+  }
+
+  function eliminarMateria(index) {
+    setMaterias((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleCancelAction() {
     setShowCancelNotice(true);
-    setTimeout(() => {
-      navigate("/retiro-ciclo");
-    }, 1200);
+    setTimeout(() => navigate("/retiro-ciclo"), 1200);
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setGuardando(true);
+    setMensajeError("");
+    setMensajeExito("");
+    try {
+      const payload = {
+        retiro: {
+          expediente: formulario.expediente,
+          carnet: formulario.carnet,
+          fecha: formulario.fecha,
+          alumno_nombre: `${formulario.alumnoNombres} ${formulario.alumnoApellidos}`.trim(),
+          carrera_nombre: formulario.carrera,
+          ciclo_a_retirar: formulario.cicloRetirar,
+          articulo_referencia: formulario.articuloReferencia,
+          texto_resolucion: formulario.textoResolucion,
+          observacion_final: formulario.observacionFinal,
+          decano_nombre: `${formulario.decanoNombres} ${formulario.decanoApellidos}`.trim(),
+          facultad_nombre: formulario.facultad,
+        },
+        asignaturas: materias
+          .filter((m) => m.nombre.trim() !== "")
+          .map((m) => ({ asignatura_nombre: m.nombre.trim(), uv: m.uv !== "" ? Number(m.uv) : null })),
+      };
+      await crearRetiro(payload);
+      setMensajeExito("Retiro de ciclo guardado correctamente.");
+      setFormulario(FORMULARIO_INICIAL);
+      setMaterias([{ nombre: "", uv: "" }]);
+    } catch (err) {
+      setMensajeError("Error al guardar: " + (err.message ?? "Error desconocido."));
+    } finally {
+      setGuardando(false);
+    }
   }
 
   return (
@@ -34,41 +97,108 @@ export function CrearRetiroCicloPage() {
       <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
         <h2 className="text-base font-semibold text-slate-700">Crear retiro de ciclo</h2>
 
-        <form className="mt-4 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-label="Formulario crear retiro de ciclo">
+        <form
+          className="mt-4 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6"
+          aria-label="Formulario crear retiro de ciclo"
+          onSubmit={handleSubmit}
+        >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Expediente</span>
-              <input type="text" className="rounded-lg border border-slate-300 px-3 py-2" placeholder="Ej. 20240001" required />
+              <input
+                type="text"
+                className="rounded-lg border border-slate-300 px-3 py-2"
+                placeholder="Ej. 20240001"
+                value={formulario.expediente}
+                onChange={(e) => handleInputChange("expediente", e.target.value)}
+                required
+              />
             </label>
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Carnet</span>
-              <input type="text" className="rounded-lg border border-slate-300 px-3 py-2" placeholder="Código del alumno" required />
+              <input
+                type="text"
+                className="rounded-lg border border-slate-300 px-3 py-2"
+                placeholder="Código del alumno"
+                value={formulario.carnet}
+                onChange={(e) => handleInputChange("carnet", e.target.value)}
+                required
+              />
             </label>
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Fecha</span>
-              <input type="date" className="rounded-lg border border-slate-300 px-3 py-2" required />
+              <input
+                type="date"
+                className="rounded-lg border border-slate-300 px-3 py-2"
+                value={formulario.fecha}
+                onChange={(e) => handleInputChange("fecha", e.target.value)}
+                required
+              />
             </label>
           </div>
 
+          {/* Alumno: nombres y apellidos separados */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">Nombre del alumno</span>
-              <input type="text" className="rounded-lg border border-slate-300 px-3 py-2" placeholder="Nombre completo" required />
-            </label>
+            <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Alumno</p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="grid gap-1 text-sm">
+                  <span className="font-medium text-slate-700">Nombres</span>
+                  <input
+                    type="text"
+                    className="rounded-lg border border-slate-300 px-3 py-2"
+                    placeholder="NOMBRES"
+                    value={formulario.alumnoNombres}
+                    onChange={(e) => handleInputChange("alumnoNombres", e.target.value)}
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  <span className="font-medium text-slate-700">Apellidos</span>
+                  <input
+                    type="text"
+                    className="rounded-lg border border-slate-300 px-3 py-2"
+                    placeholder="APELLIDOS"
+                    value={formulario.alumnoApellidos}
+                    onChange={(e) => handleInputChange("alumnoApellidos", e.target.value)}
+                    required
+                  />
+                </label>
+              </div>
+            </div>
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Carrera</span>
-              <input type="text" className="rounded-lg border border-slate-300 px-3 py-2" placeholder="Nombre de la carrera" required />
+              <input
+                type="text"
+                className="rounded-lg border border-slate-300 px-3 py-2"
+                placeholder="NOMBRE DE LA CARRERA"
+                value={formulario.carrera}
+                onChange={(e) => handleInputChange("carrera", e.target.value)}
+                required
+              />
             </label>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Ciclo a retirar</span>
-              <input type="text" className="rounded-lg border border-slate-300 px-3 py-2" placeholder="Ej. I-2026" required />
+              <input
+                type="text"
+                className="rounded-lg border border-slate-300 px-3 py-2"
+                placeholder="Ej. I-2026"
+                value={formulario.cicloRetirar}
+                onChange={(e) => handleInputChange("cicloRetirar", e.target.value)}
+                required
+              />
             </label>
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Artículo de referencia</span>
-              <input type="text" className="rounded-lg border border-slate-300 px-3 py-2" placeholder="Ej. Artículo 14" defaultValue="Artículo 14" />
+              <input
+                type="text"
+                className="rounded-lg border border-slate-300 px-3 py-2"
+                value={formulario.articuloReferencia}
+                onChange={(e) => handleInputChange("articuloReferencia", e.target.value)}
+              />
             </label>
           </div>
 
@@ -76,37 +206,52 @@ export function CrearRetiroCicloPage() {
             <span className="font-medium text-slate-700">Texto de resolución</span>
             <textarea
               className="min-h-[100px] rounded-lg border border-slate-300 px-3 py-2"
-              placeholder="Texto base de la autorización del retiro"
-              defaultValue="De acuerdo a su solicitud y en base al artículo 14 del Reglamento de Administración Académica, se autoriza al bachiller, previo al pago del arancel correspondiente, el retiro extraordinario de las asignaturas inscritas en el ciclo indicado."
+              value={formulario.textoResolucion}
+              onChange={(e) => handleInputChange("textoResolucion", e.target.value)}
             />
           </label>
 
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Asignaturas inscritas</h3>
-            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[1fr_120px]">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Asignaturas inscritas</h3>
+              <button
+                type="button"
+                onClick={agregarMateria}
+                className="flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "1.1rem" }}>add</span>
+                Agregar
+              </button>
+            </div>
+            <div className="mt-3 grid gap-2">
               {materias.map((materia, index) => (
-                <>
+                <div key={index} className="grid grid-cols-[1fr_100px_auto] gap-2 items-center">
                   <input
-                    key={`materia-${index}`}
                     type="text"
-                    className="rounded-lg border border-slate-300 px-3 py-2"
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
                     placeholder={`Asignatura ${index + 1}`}
                     value={materia.nombre}
-                    onChange={(event) =>
-                      handleMateriaChange(index, "nombre", event.target.value)
-                    }
+                    onChange={(e) => handleMateriaChange(index, "nombre", e.target.value)}
                   />
                   <input
-                    key={`uv-${index}`}
-                    type="text"
-                    className="rounded-lg border border-slate-300 px-3 py-2"
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
                     placeholder="UV"
                     value={materia.uv}
-                    onChange={(event) =>
-                      handleMateriaChange(index, "uv", event.target.value)
-                    }
+                    onChange={(e) => handleMateriaChange(index, "uv", e.target.value)}
                   />
-                </>
+                  <button
+                    type="button"
+                    onClick={() => eliminarMateria(index)}
+                    disabled={materias.length === 1}
+                    className="rounded-lg p-1.5 text-slate-400 hover:text-red-600 disabled:opacity-30"
+                    aria-label="Eliminar asignatura"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "1.2rem" }}>delete</span>
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -116,21 +261,60 @@ export function CrearRetiroCicloPage() {
             <textarea
               className="min-h-[80px] rounded-lg border border-slate-300 px-3 py-2"
               placeholder="Ej. Se autoriza retiro del ciclo con exoneración de cuota pendiente."
+              value={formulario.observacionFinal}
+              onChange={(e) => handleInputChange("observacionFinal", e.target.value)}
             />
           </label>
 
+          {/* Decano: nombres y apellidos separados */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">Nombre del decano</span>
-              <input type="text" className="rounded-lg border border-slate-300 px-3 py-2" placeholder="Nombre del decano" required />
-            </label>
+            <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Decano</p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="grid gap-1 text-sm">
+                  <span className="font-medium text-slate-700">Nombres</span>
+                  <input
+                    type="text"
+                    className="rounded-lg border border-slate-300 px-3 py-2"
+                    placeholder="NOMBRES"
+                    value={formulario.decanoNombres}
+                    onChange={(e) => handleInputChange("decanoNombres", e.target.value)}
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  <span className="font-medium text-slate-700">Apellidos</span>
+                  <input
+                    type="text"
+                    className="rounded-lg border border-slate-300 px-3 py-2"
+                    placeholder="APELLIDOS"
+                    value={formulario.decanoApellidos}
+                    onChange={(e) => handleInputChange("decanoApellidos", e.target.value)}
+                    required
+                  />
+                </label>
+              </div>
+            </div>
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Facultad</span>
-              <input type="text" className="rounded-lg border border-slate-300 px-3 py-2" placeholder="Nombre de la facultad" required />
+              <input
+                type="text"
+                className="rounded-lg border border-slate-300 px-3 py-2"
+                placeholder="NOMBRE DE LA FACULTAD"
+                value={formulario.facultad}
+                onChange={(e) => handleInputChange("facultad", e.target.value)}
+                required
+              />
             </label>
           </div>
 
           <div className="flex justify-end gap-2">
+            {mensajeExito && (
+              <p className="self-center text-sm font-semibold text-green-700">{mensajeExito}</p>
+            )}
+            {mensajeError && (
+              <p className="self-center text-sm font-semibold text-red-700">{mensajeError}</p>
+            )}
             <button
               type="button"
               onClick={handleCancelAction}
@@ -138,8 +322,12 @@ export function CrearRetiroCicloPage() {
             >
               Cancelar
             </button>
-            <button type="submit" className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700">
-              Guardar retiro
+            <button
+              type="submit"
+              disabled={guardando}
+              className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+            >
+              {guardando ? "Guardando..." : "Guardar retiro"}
             </button>
           </div>
         </form>
@@ -154,3 +342,4 @@ export function CrearRetiroCicloPage() {
     </main>
   );
 }
+
