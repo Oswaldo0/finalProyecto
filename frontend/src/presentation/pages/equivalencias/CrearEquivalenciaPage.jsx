@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { crearEquivalencia } from "../../../application/equivalencias/equivalenciasUseCases.js";
 
 const FILAS_TABLA = 10;
 
@@ -17,6 +18,9 @@ export function CrearEquivalenciaPage() {
   const navigate = useNavigate();
   const [showCancelNotice, setShowCancelNotice] = useState(false);
   const [tabla, setTabla] = useState(TABLA_INICIAL);
+  const [guardando, setGuardando] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState("");
+  const [mensajeError, setMensajeError] = useState("");
 
   const [nombre, setNombre] = useState("");
   const [carrerasCursadas, setCarrerasCursadas] = useState("");
@@ -52,9 +56,56 @@ export function CrearEquivalenciaPage() {
     }, 1200);
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    // Lógica de guardado pendiente
+    setGuardando(true);
+    setMensajeExito("");
+    setMensajeError("");
+    try {
+      const detalles = tabla
+        .filter((row) => row.asignaturaCursada.trim() !== "" && row.asignaturaSolicitada.trim() !== "")
+        .map((row) => ({
+          asignatura_cursada: row.asignaturaCursada.trim(),
+          uv: row.uv !== "" ? Number(row.uv) : null,
+          nota: row.nota !== "" ? Number(row.nota) : null,
+          institucion_nombre: row.institucion.trim() || null,
+          asignatura_solicitada: row.asignaturaSolicitada.trim(),
+          resultado: row.ap ? "APROBADA" : row.de ? "DENEGADA" : "PENDIENTE",
+        }));
+
+      const payload = {
+        equivalencia: {
+          fecha_solicitud: fecha || null,
+          alumno_nombre: nombre.trim(),
+          carreras_cursadas: carrerasCursadas.trim() || null,
+          carrera_destino: carreraDestino.trim() || null,
+          texto_solicitud: textoSolicitud.trim(),
+          notas_universidad: notasReservado.trim() || null,
+          decano_nombre: firmaDecano.trim() || null,
+          fecha_decano: fechaDecano || null,
+          alumno_nombre_firma: firmaAlumno.trim() || null,
+          estado: "BORRADOR",
+        },
+        detalles,
+      };
+
+      await crearEquivalencia(payload);
+      setMensajeExito("Equivalencia guardada correctamente.");
+      setTabla(TABLA_INICIAL);
+      setNombre("");
+      setCarrerasCursadas("");
+      setCarreraDestino("");
+      setFecha("");
+      setFirmaAlumno("");
+      setNotasReservado("");
+      setFirmaDecano("");
+      setFechaDecano("");
+      setTimeout(() => navigate("/equivalencias/imprimir"), 1200);
+    } catch (err) {
+      setMensajeError(err.message || "Error al guardar la equivalencia.");
+    } finally {
+      setGuardando(false);
+    }
   }
 
   return (
@@ -74,6 +125,16 @@ export function CrearEquivalenciaPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {mensajeExito && (
+            <div className="rounded border border-green-300 bg-green-50 px-4 py-2 text-sm text-green-700">
+              {mensajeExito}
+            </div>
+          )}
+          {mensajeError && (
+            <div className="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
+              {mensajeError}
+            </div>
+          )}
 
           {/* Tabla de asignaturas */}
           <div>
@@ -270,9 +331,10 @@ export function CrearEquivalenciaPage() {
             </button>
             <button
               type="submit"
+              disabled={guardando}
               className="px-6 py-2 rounded bg-blue-700 text-white text-sm font-semibold hover:bg-blue-800 transition"
             >
-              Guardar
+              {guardando ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </form>

@@ -4,6 +4,7 @@ import penalidadesRouter from "./routes/penalidades.routes.js";
 import estudiantesRouter from "./routes/estudiantes.routes.js";
 import carrerasRouter from "./routes/carreras.routes.js";
 import retiroCicloRouter from "./routes/retiroCiclo.routes.js";
+import equivalenciasRouter from "./routes/equivalencias.routes.js";
 import { closeDatabasePool } from "../infrastructure/database/mysqlPool.js";
 
 const app = express();
@@ -28,6 +29,7 @@ app.use("/api/penalidades", penalidadesRouter);
 app.use("/api/estudiantes", estudiantesRouter);
 app.use("/api/carreras", carrerasRouter);
 app.use("/api/retiros-ciclo", retiroCicloRouter);
+app.use("/api/equivalencias", equivalenciasRouter);
 
 // Manejador global de errores
 app.use((err, _req, res, _next) => {

@@ -1,9 +1,41 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const DOCUMENTOS_EQUIVALENCIA = [];
+import { listarEquivalencias } from "../../../application/equivalencias/equivalenciasUseCases.js";
 
 export function ImprimirEquivalenciaPage() {
   const navigate = useNavigate();
+  const [documentos, setDocumentos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setCargando(true);
+        const result = await listarEquivalencias({ page: 1, limit: 50 });
+        if (mounted) {
+          setDocumentos(result.data ?? []);
+          setError("");
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(err.message || "No se pudieron cargar las equivalencias.");
+        }
+      } finally {
+        if (mounted) setCargando(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  function formatFecha(value) {
+    if (!value) return "-";
+    return new Date(value).toLocaleDateString("es-SV");
+  }
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
@@ -25,12 +57,18 @@ export function ImprimirEquivalenciaPage() {
           </button>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <p className="text-sm font-semibold text-blue-800">Sin documentos disponibles</p>
-          <p className="mt-1 text-xs text-blue-700">
-            La tabla ya está preparada, pero todavía no aparecen registros porque aún no hay base de datos conectada.
-          </p>
-        </div>
+        {cargando && (
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+            Cargando equivalencias...
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+            <p className="text-sm font-semibold text-red-800">Error al cargar datos</p>
+            <p className="mt-1 text-xs text-red-700">{error}</p>
+          </div>
+        )}
 
         <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
           <table className="min-w-full border-collapse text-sm">
@@ -46,20 +84,20 @@ export function ImprimirEquivalenciaPage() {
               </tr>
             </thead>
             <tbody>
-              {DOCUMENTOS_EQUIVALENCIA.length === 0 ? (
+              {!cargando && documentos.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="px-4 py-10 text-center text-sm text-slate-500">
                     No hay solicitudes de equivalencia para mostrar.
                   </td>
                 </tr>
               ) : (
-                DOCUMENTOS_EQUIVALENCIA.map((documento) => (
+                documentos.map((documento) => (
                   <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
                     <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.fecha}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.alumno}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.carreraDestino}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.decision}</td>
+                    <td className="border-t border-slate-200 px-4 py-3">{formatFecha(documento.fecha_solicitud)}</td>
+                    <td className="border-t border-slate-200 px-4 py-3">{documento.alumno_nombre}</td>
+                    <td className="border-t border-slate-200 px-4 py-3">{documento.carrera_destino || "-"}</td>
+                    <td className="border-t border-slate-200 px-4 py-3">-</td>
                     <td className="border-t border-slate-200 px-4 py-3">{documento.estado}</td>
                     <td className="border-t border-slate-200 px-4 py-3 text-center">
                       <button type="button" className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
