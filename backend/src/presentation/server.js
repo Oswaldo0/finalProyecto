@@ -5,6 +5,7 @@ import estudiantesRouter from "./routes/estudiantes.routes.js";
 import carrerasRouter from "./routes/carreras.routes.js";
 import retiroCicloRouter from "./routes/retiroCiclo.routes.js";
 import equivalenciasRouter from "./routes/equivalencias.routes.js";
+import absorcionesRouter from "./routes/absorciones.routes.js";
 import { closeDatabasePool } from "../infrastructure/database/mysqlPool.js";
 
 const app = express();
@@ -30,6 +31,7 @@ app.use("/api/estudiantes", estudiantesRouter);
 app.use("/api/carreras", carrerasRouter);
 app.use("/api/retiros-ciclo", retiroCicloRouter);
 app.use("/api/equivalencias", equivalenciasRouter);
+app.use("/api/absorciones", absorcionesRouter);
 
 // Manejador global de errores
 app.use((err, _req, res, _next) => {

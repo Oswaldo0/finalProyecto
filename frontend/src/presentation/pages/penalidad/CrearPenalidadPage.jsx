@@ -5,6 +5,8 @@ import { crearPenalidad } from "../../../application/penalidad/penalidadUseCases
 const ANIO_ACTUAL = new Date().getFullYear();
 
 const INICIAL = {
+  estudianteId: "",
+  carreraId: "",
   secretarioNombres: "",
   secretarioApellidos: "",
   decanoNombres: "",
@@ -67,6 +69,18 @@ export function CrearPenalidadPage() {
     );
   }
 
+  function separarNombreCompleto(nombre = "") {
+    const partes = String(nombre).trim().split(/\s+/).filter(Boolean);
+    if (partes.length <= 1) {
+      return { nombres: partes[0] ?? "", apellidos: "" };
+    }
+    const mitad = Math.ceil(partes.length / 2);
+    return {
+      nombres: partes.slice(0, mitad).join(" "),
+      apellidos: partes.slice(mitad).join(" "),
+    };
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const nuevosErrores = {};
@@ -82,6 +96,8 @@ export function CrearPenalidadPage() {
     try {
       const payload = {
         penalidad: {
+          estudiante_id: form.estudianteId ? Number(form.estudianteId) : null,
+          carrera_id: form.carreraId ? Number(form.carreraId) : null,
           secretario_nombre: `${form.secretarioNombres} ${form.secretarioApellidos}`.trim(),
           decano_nombre: `${form.decanoNombres} ${form.decanoApellidos}`.trim(),
           fecha: form.fecha,

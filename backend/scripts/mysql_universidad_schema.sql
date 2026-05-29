@@ -149,6 +149,7 @@ CREATE TABLE facultades
           (
             id BIGINT
             UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  correlativo VARCHAR(50) GENERATED ALWAYS AS (CONCAT('PEN-', YEAR(fecha), '-', LPAD(id, 4, '0'))) STORED,
   estudiante_id BIGINT UNSIGNED NULL,
   carrera_id BIGINT UNSIGNED NULL,
   usuario_id BIGINT UNSIGNED NULL,
@@ -173,6 +174,7 @@ CREATE TABLE facultades
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
             UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_penalidades_correlativo (correlativo),
   CONSTRAINT fk_penalidades_estudiante
             FOREIGN KEY
             (estudiante_id) REFERENCES estudiantes
@@ -243,6 +245,7 @@ CREATE TABLE facultades
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
                 UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_retiros_ciclo_correlativo (correlativo),
   CONSTRAINT fk_retiros_ciclo_estudiante
                 FOREIGN KEY
                 (estudiante_id) REFERENCES estudiantes
@@ -286,6 +289,7 @@ CREATE TABLE facultades
                   (
                     id BIGINT
                     UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  correlativo VARCHAR(50) GENERATED ALWAYS AS (CONCAT('EQ-', YEAR(COALESCE(fecha_solicitud, created_at)), '-', LPAD(id, 4, '0'))) STORED,
   estudiante_id BIGINT UNSIGNED NULL,
   usuario_id BIGINT UNSIGNED NULL,
   fecha_solicitud DATE NULL,
@@ -307,6 +311,7 @@ CREATE TABLE facultades
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
                     UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_equivalencias_correlativo (correlativo),
   CONSTRAINT fk_equivalencias_estudiante
                     FOREIGN KEY
                     (estudiante_id) REFERENCES estudiantes
@@ -354,6 +359,7 @@ CREATE TABLE facultades
                       (
                         id BIGINT
                         UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  correlativo VARCHAR(50) GENERATED ALWAYS AS (CONCAT('ABS-', YEAR(fecha), '-', LPAD(id, 4, '0'))) STORED,
   estudiante_id BIGINT UNSIGNED NULL,
   facultad_id BIGINT UNSIGNED NULL,
   usuario_id BIGINT UNSIGNED NULL,
@@ -382,6 +388,7 @@ CREATE TABLE facultades
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
                         UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_absorciones_correlativo (correlativo),
   CONSTRAINT fk_absorciones_estudiante
                         FOREIGN KEY
                         (estudiante_id) REFERENCES estudiantes

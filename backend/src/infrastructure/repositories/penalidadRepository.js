@@ -12,7 +12,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
 
   const [rows] = await pool.query(
     `SELECT p.id,
-            CONCAT('PEN-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) AS correlativo,
+            p.correlativo,
             p.alumno_nombre, p.carrera_nombre, p.fecha,
             p.ciclo_reingreso, p.estado, p.created_at
      FROM penalidades p
@@ -33,7 +33,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
 export async function findById(id) {
   const [[penalidad]] = await pool.query(
     `SELECT p.id,
-            CONCAT('PEN-', YEAR(p.fecha), '-', LPAD(p.id, 4, '0')) AS correlativo,
+            p.correlativo,
             p.estudiante_id, p.carrera_id, p.usuario_id,
             p.secretario_nombre, p.decano_nombre,
             p.fecha, p.cantidad_anios_egreso, p.ciclo_reingreso,

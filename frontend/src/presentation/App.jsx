@@ -49,6 +49,7 @@ export function App() {
         <Route path="/absorciones" element={<AbsorcionesPage />} />
         <Route path="/absorciones/crear" element={<CrearAbsorcionPage />} />
         <Route path="/absorciones/modificar" element={<ModificarAbsorcionPage />} />
+        <Route path="/absorciones/modificar/:id" element={<ModificarAbsorcionPage />} />
         <Route path="/absorciones/imprimir" element={<ImprimirAbsorcionPage />} />
 
         <Route path="/anotaciones" element={<AnotacionesPage />} />

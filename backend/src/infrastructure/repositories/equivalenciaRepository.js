@@ -12,7 +12,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
 
   const [rows] = await pool.query(
     `SELECT e.id,
-            CONCAT('EQ-', YEAR(COALESCE(e.fecha_solicitud, e.created_at)), '-', LPAD(e.id, 4, '0')) AS correlativo,
+            e.correlativo,
             e.fecha_solicitud,
             e.alumno_nombre,
             e.carrera_destino,
@@ -36,6 +36,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
 export async function findById(id) {
   const [[equivalencia]] = await pool.query(
     `SELECT e.id,
+            e.correlativo,
             e.estudiante_id,
             e.usuario_id,
             e.fecha_solicitud,

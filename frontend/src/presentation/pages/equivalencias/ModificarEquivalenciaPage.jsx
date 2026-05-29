@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const FILAS_TABLA = 10;
-
-const TABLA_INICIAL = Array.from({ length: FILAS_TABLA }, () => ({
-  asignaturaCursada: "",
-  uv: "",
-  nota: "",
-  institucion: "",
-  asignaturaSolicitada: "",
-  ap: false,
-  de: false,
-}));
+const TABLA_INICIAL = [
+  {
+    asignaturaCursada: "",
+    uv: "",
+    nota: "",
+    institucion: "",
+    asignaturaSolicitada: "",
+    ap: false,
+    de: false,
+  },
+];
 
 export function ModificarEquivalenciaPage() {
   const navigate = useNavigate();
@@ -29,20 +29,78 @@ export function ModificarEquivalenciaPage() {
   const [nombreDecano, setNombreDecano] = useState("");
   const [fechaDecano, setFechaDecano] = useState("");
 
+  function normalizeTablaField(field, value) {
+    if (
+      field === "asignaturaCursada" ||
+      field === "asignaturaSolicitada" ||
+      field === "institucion"
+    ) {
+      return String(value).toUpperCase();
+    }
+
+    if (field === "uv") {
+      const raw = String(value).trim();
+      if (raw === "") return "";
+      const numeric = Number(raw);
+      if (!Number.isInteger(numeric)) return "";
+      if (numeric < 1 || numeric > 9) return "";
+      return String(numeric);
+    }
+
+    if (field === "nota") {
+      const raw = String(value).trim();
+      if (raw === "") return "";
+      const numeric = Number(raw);
+      if (Number.isNaN(numeric) || numeric < 0) return "";
+      return raw;
+    }
+
+    return value;
+  }
+
   function handleTablaChange(index, field, value) {
     setTabla((prev) =>
       prev.map((row, itemIndex) =>
-        itemIndex === index ? { ...row, [field]: value } : row,
+        itemIndex === index ? { ...row, [field]: normalizeTablaField(field, value) } : row,
       ),
     );
   }
 
   function handleCheckbox(index, field) {
     setTabla((prev) =>
-      prev.map((row, itemIndex) =>
-        itemIndex === index ? { ...row, [field]: !row[field] } : row,
-      ),
+      prev.map((row, itemIndex) => {
+        if (itemIndex !== index) return row;
+
+        if (field === "ap") {
+          return row.ap ? { ...row, ap: false } : { ...row, ap: true, de: false };
+        }
+
+        if (field === "de") {
+          return row.de ? { ...row, de: false } : { ...row, de: true, ap: false };
+        }
+
+        return row;
+      }),
     );
+  }
+
+  function agregarFila() {
+    setTabla((prev) => [
+      ...prev,
+      {
+        asignaturaCursada: "",
+        uv: "",
+        nota: "",
+        institucion: "",
+        asignaturaSolicitada: "",
+        ap: false,
+        de: false,
+      },
+    ]);
+  }
+
+  function eliminarFila(index) {
+    setTabla((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleCancelAction() {
@@ -79,6 +137,19 @@ export function ModificarEquivalenciaPage() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div>
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-slate-700">Asignaturas</p>
+              <button
+                type="button"
+                onClick={agregarFila}
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>
+                  add
+                </span>
+                Agregar fila
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full border-2 border-black text-xs">
                 <thead>
@@ -90,18 +161,30 @@ export function ModificarEquivalenciaPage() {
                     <th className="border-2 border-black px-2 py-1 text-left">Asignatura Solicitada</th>
                     <th className="w-10 border-2 border-black px-2 py-1 text-center">AP</th>
                     <th className="w-10 border-2 border-black px-2 py-1 text-center">DE</th>
+                    <th className="w-16 border-2 border-black px-2 py-1 text-center">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tabla.map((row, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="border-2 border-black px-1 py-0.5"><input className="w-full bg-transparent text-xs outline-none" value={row.asignaturaCursada} onChange={(event) => handleTablaChange(index, "asignaturaCursada", event.target.value)} placeholder="Asignatura cursada" /></td>
-                      <td className="border-2 border-black px-1 py-0.5"><input className="w-full bg-transparent text-center text-xs outline-none" value={row.uv} onChange={(event) => handleTablaChange(index, "uv", event.target.value)} placeholder="U.V" /></td>
-                      <td className="border-2 border-black px-1 py-0.5"><input className="w-full bg-transparent text-center text-xs outline-none" value={row.nota} onChange={(event) => handleTablaChange(index, "nota", event.target.value)} placeholder="Nota" /></td>
+                      <td className="border-2 border-black px-1 py-0.5"><input type="number" min="1" max="9" step="1" inputMode="numeric" className="w-full bg-transparent text-center text-xs outline-none" value={row.uv} onChange={(event) => handleTablaChange(index, "uv", event.target.value)} onKeyDown={(event) => { if (["e", "+", "-", "."].includes(event.key)) { event.preventDefault(); } }} placeholder="U.V" /></td>
+                      <td className="border-2 border-black px-1 py-0.5"><input type="number" min="0" step="0.1" inputMode="decimal" className="w-full bg-transparent text-center text-xs outline-none" value={row.nota} onChange={(event) => handleTablaChange(index, "nota", event.target.value)} onKeyDown={(event) => { if (["e", "+", "-"].includes(event.key)) { event.preventDefault(); } }} placeholder="Nota" /></td>
                       <td className="border-2 border-black px-1 py-0.5"><input className="w-full bg-transparent text-xs outline-none" value={row.institucion} onChange={(event) => handleTablaChange(index, "institucion", event.target.value)} placeholder="Institución" /></td>
                       <td className="border-2 border-black px-1 py-0.5"><input className="w-full bg-transparent text-xs outline-none" value={row.asignaturaSolicitada} onChange={(event) => handleTablaChange(index, "asignaturaSolicitada", event.target.value)} placeholder="Asignatura solicitada" /></td>
                       <td className="border-2 border-black px-1 py-0.5 text-center"><input type="checkbox" checked={row.ap} onChange={() => handleCheckbox(index, "ap")} className="accent-blue-600" /></td>
                       <td className="border-2 border-black px-1 py-0.5 text-center"><input type="checkbox" checked={row.de} onChange={() => handleCheckbox(index, "de")} className="accent-blue-600" /></td>
+                      <td className="border-2 border-black px-1 py-0.5 text-center">
+                        <button
+                          type="button"
+                          onClick={() => eliminarFila(index)}
+                          disabled={tabla.length === 1}
+                          className="rounded px-2 py-1 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-40"
+                          aria-label={`Eliminar fila ${index + 1}`}
+                        >
+                          Eliminar
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
