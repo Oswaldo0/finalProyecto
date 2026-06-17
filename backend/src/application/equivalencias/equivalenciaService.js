@@ -20,6 +20,18 @@ export async function crear(body) {
   return repo.create({ equivalencia, detalles });
 }
 
+export async function actualizar(id, body) {
+  await obtener(id);
+  const { equivalencia, detalles } = body;
+  validarCampos(equivalencia);
+  return repo.update(id, { equivalencia, detalles });
+}
+
+export async function eliminar(id) {
+  await obtener(id);
+  return repo.remove(id);
+}
+
 function validarCampos(equivalencia = {}) {
   const required = ["alumno_nombre", "texto_solicitud"];
   for (const field of required) {

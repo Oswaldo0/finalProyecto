@@ -18,6 +18,7 @@ export async function obtener(id) {
 export async function crear(body) {
   const { penalidad, asignaturas } = body;
   validarCampos(penalidad);
+  validarAsignaturas(asignaturas);
   return repo.create({ penalidad, asignaturas });
 }
 
@@ -25,6 +26,7 @@ export async function actualizar(id, body) {
   await obtener(id);
   const { penalidad, asignaturas } = body;
   validarCampos(penalidad);
+  validarAsignaturas(asignaturas);
   return repo.update(id, { penalidad, asignaturas });
 }
 
@@ -126,6 +128,17 @@ function validarCampos(p = {}) {
   const faltantes = requeridos.filter((k) => p[k] === undefined || p[k] === "");
   if (faltantes.length > 0) {
     const err = new Error(`Campos requeridos: ${faltantes.join(", ")}`);
+    err.status = 422;
+    throw err;
+  }
+}
+
+function validarAsignaturas(asignaturas = []) {
+  const asignaturasValidas = (asignaturas ?? []).filter(
+    (a) => String(a?.asignatura_nombre ?? "").trim() !== ""
+  );
+  if (asignaturasValidas.length === 0) {
+    const err = new Error("Debe registrar al menos una asignatura.");
     err.status = 422;
     throw err;
   }

@@ -1,5 +1,15 @@
 import { useNavigate } from "react-router-dom";
 
+const ICON_ALIASES = {
+  add: "create",
+  add_box: "create",
+  cached: "edit",
+  edit: "edit",
+  modify: "edit",
+  print: "print",
+  print_connect: "print",
+};
+
 export function SectionPage({ titulo, acciones, baseRoute }) {
   const navigate = useNavigate();
 
@@ -17,16 +27,13 @@ export function SectionPage({ titulo, acciones, baseRoute }) {
                 onClick={() => navigate(accion.route ?? baseRoute)}
                 className={
                   accion.buttonClassName
-                    ? `flex h-[220px] w-[260px] flex-col items-center justify-center gap-2 rounded-2xl border border-black px-8 py-8 text-lg font-semibold shadow-sm transition ${accion.buttonClassName}`
-                    : "flex h-[220px] w-[260px] flex-col items-center justify-center gap-2 rounded-2xl border border-black bg-white px-8 py-8 text-lg font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                    ? `flex h-[220px] w-[260px] flex-col items-center justify-center gap-4 rounded-xl border border-transparent px-8 py-8 text-lg font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${accion.buttonClassName}`
+                    : "flex h-[220px] w-[260px] flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white px-8 py-8 text-lg font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
                 }
               >
                 {accion.icon && (
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: "4rem" }}
-                  >
-                    {accion.icon}
+                  <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+                    <ActionIcon name={accion.icon} className="h-12 w-12" />
                   </span>
                 )}
                 {accion.label}
@@ -36,5 +43,48 @@ export function SectionPage({ titulo, acciones, baseRoute }) {
         </div>
       </section>
     </main>
+  );
+}
+
+function ActionIcon({ name, className }) {
+  const iconName = ICON_ALIASES[name] ?? name;
+
+  if (iconName === "create") {
+    return (
+      <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M18 8h20l12 12v34a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+        <path d="M38 8v14h12" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M32 30v16M24 38h16" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (iconName === "edit") {
+    return (
+      <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M16 48h10l27-27a7 7 0 0 0-10-10L16 38v10Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+        <path d="m38 16 10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        <path d="M14 56h38" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        <path d="M20 42h8v8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (iconName === "print") {
+    return (
+      <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M20 24V10h24v14" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+        <path d="M20 46H14a6 6 0 0 1-6-6v-8a6 6 0 0 1 6-6h36a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6h-6" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+        <path d="M20 38h24v18H20V38Z" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+        <path d="M45 34h1" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <circle cx="32" cy="32" r="22" stroke="currentColor" strokeWidth="4" />
+      <path d="M32 20v14l9 6" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }

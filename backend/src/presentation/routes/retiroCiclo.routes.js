@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as service from "../../application/retiroCiclo/retiroCicloService.js";
+import { requireRoles } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
@@ -26,7 +27,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), async (req, res, next) => {
   try {
     const retiro = await service.crear(req.body);
     res.status(201).json(retiro);
@@ -35,7 +36,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), async (req, res, next) => {
   try {
     const retiro = await service.actualizar(Number(req.params.id), req.body);
     res.json(retiro);
@@ -44,7 +45,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", requireRoles("ADMIN"), async (req, res, next) => {
   try {
     await service.eliminar(Number(req.params.id));
     res.json({ message: "Retiro de ciclo eliminado." });

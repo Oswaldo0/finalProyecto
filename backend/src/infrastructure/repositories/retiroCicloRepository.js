@@ -1,5 +1,11 @@
 import pool from "../database/mysqlPool.js";
 
+function buildRetiroCicloCorrelativo(fecha, id) {
+  if (!fecha || !id) return null;
+  const year = String(new Date(fecha).getFullYear()).padStart(4, "0");
+  return `RET-${year}-${String(id).padStart(4, "0")}`;
+}
+
 export async function findAll({ page = 1, limit = 20, estado } = {}) {
   const offset = (page - 1) * limit;
   const params = [];
@@ -99,6 +105,14 @@ export async function create({ retiro, asignaturas = [] }) {
     );
 
     const retiroId = result.insertId;
+    const correlativo = buildRetiroCicloCorrelativo(retiro.fecha, retiroId);
+
+    if (correlativo) {
+      await conn.query(
+        `UPDATE retiros_ciclo SET correlativo = ? WHERE id = ?`,
+        [correlativo, retiroId]
+      );
+    }
 
     if (asignaturas.length > 0) {
       const values = asignaturas.map((a, i) => [
@@ -155,6 +169,11 @@ export async function update(id, { retiro, asignaturas }) {
         id,
       ]
     );
+
+    const correlativo = buildRetiroCicloCorrelativo(retiro.fecha, id);
+    if (correlativo) {
+      await conn.query(`UPDATE retiros_ciclo SET correlativo = ? WHERE id = ?`, [correlativo, id]);
+    }
 
     if (asignaturas !== undefined) {
       await conn.query(

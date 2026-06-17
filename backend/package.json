@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/presentation/server.js",
-    "start": "node src/presentation/server.js"
+    "start": "node src/presentation/server.js",
+    "migrate:auth": "node scripts/apply_auth_migration.mjs",
+    "migrate:auditoria": "node scripts/apply_auditoria_migration.mjs",
+    "migrate:correlativos": "node scripts/apply_correlativos_migration.mjs",
+    "migrate:informes": "node scripts/apply_informes_migration.mjs"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mssql": "^12.2.1",
     "mysql2": "^3.22.0",
     "pdfkit": "^0.18.0"
   },

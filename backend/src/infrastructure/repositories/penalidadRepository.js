@@ -1,5 +1,11 @@
 import pool from "../database/mysqlPool.js";
 
+function buildPenalidadCorrelativo(fecha, id) {
+  if (!fecha || !id) return null;
+  const year = String(new Date(fecha).getFullYear()).padStart(4, "0");
+  return `PEN-${year}-${String(id).padStart(4, "0")}`;
+}
+
 export async function findAll({ page = 1, limit = 20, estado } = {}) {
   const offset = (page - 1) * limit;
   const params = [];
@@ -88,6 +94,14 @@ export async function create({ penalidad, asignaturas = [] }) {
     );
 
     const penalidadId = result.insertId;
+    const correlativo = buildPenalidadCorrelativo(penalidad.fecha, penalidadId);
+
+    if (correlativo) {
+      await conn.query(
+        `UPDATE penalidades SET correlativo = ? WHERE id = ?`,
+        [correlativo, penalidadId]
+      );
+    }
 
     if (asignaturas.length > 0) {
       const values = asignaturas.map((a, i) => [
@@ -142,6 +156,11 @@ export async function update(id, { penalidad, asignaturas }) {
         id,
       ]
     );
+
+    const correlativo = buildPenalidadCorrelativo(penalidad.fecha, id);
+    if (correlativo) {
+      await conn.query(`UPDATE penalidades SET correlativo = ? WHERE id = ?`, [correlativo, id]);
+    }
 
     if (asignaturas !== undefined) {
       await conn.query(

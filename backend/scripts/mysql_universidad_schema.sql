@@ -1,10 +1,10 @@
 CREATE DATABASE
-IF NOT EXISTS universidad_sonsonate
+IF NOT EXISTS bd_uso_sonsonate
   CHARACTER
 SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
-USE universidad_sonsonate;
+USE bd_uso_sonsonate;
 
 CREATE TABLE facultades
 (
@@ -145,11 +145,82 @@ CREATE TABLE facultades
           (email)
 ) ENGINE=InnoDB;
 
+          CREATE TABLE auditoria_eventos
+          (
+            id BIGINT
+            UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  usuario_id BIGINT UNSIGNED NULL,
+  username VARCHAR
+            (60) NULL,
+  rol VARCHAR
+            (30) NULL,
+  metodo VARCHAR
+            (10) NOT NULL,
+  ruta VARCHAR
+            (255) NOT NULL,
+  accion ENUM
+            ('CREAR', 'ACTUALIZAR', 'ELIMINAR', 'IMPRIMIR') NOT NULL,
+  entidad VARCHAR
+            (80) NULL,
+  estado_http SMALLINT UNSIGNED NULL,
+  ip VARCHAR
+            (80) NULL,
+  user_agent VARCHAR
+            (255) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_auditoria_usuario
+            FOREIGN KEY
+            (usuario_id) REFERENCES usuarios
+            (id) ON
+            DELETE
+            SET NULL,
+  KEY idx_auditoria_usuario
+            (usuario_id),
+  KEY idx_auditoria_accion
+            (accion),
+  KEY idx_auditoria_created_at
+            (created_at)
+) ENGINE=InnoDB;
+
+          CREATE TABLE informe_documentos_resumen
+          (
+            id BIGINT
+            UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  source_table VARCHAR
+            (80) NOT NULL,
+  source_id BIGINT UNSIGNED NOT NULL,
+  tipo_documento ENUM
+            ('PENALIDAD', 'RETIRO_CICLO', 'EQUIVALENCIA', 'ABSORCION') NOT NULL,
+  correlativo VARCHAR
+            (50) NULL,
+  fecha_documento DATE NULL,
+  estado VARCHAR
+            (30) NULL,
+  alumno_nombre VARCHAR
+            (250) NULL,
+  carrera_nombre VARCHAR
+            (250) NULL,
+  created_at DATETIME NULL,
+  updated_at DATETIME NULL,
+  synced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
+            UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_informe_documento_source
+            (source_table, source_id),
+  KEY idx_informe_tipo
+            (tipo_documento),
+  KEY idx_informe_fecha
+            (fecha_documento),
+  KEY idx_informe_estado
+            (estado),
+  KEY idx_informe_carrera
+            (carrera_nombre)
+) ENGINE=InnoDB;
+
           CREATE TABLE penalidades
           (
             id BIGINT
             UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  correlativo VARCHAR(50) GENERATED ALWAYS AS (CONCAT('PEN-', YEAR(fecha), '-', LPAD(id, 4, '0'))) STORED,
+  correlativo VARCHAR(50) NULL,
   estudiante_id BIGINT UNSIGNED NULL,
   carrera_id BIGINT UNSIGNED NULL,
   usuario_id BIGINT UNSIGNED NULL,
@@ -214,10 +285,12 @@ CREATE TABLE facultades
               )
 ) ENGINE=InnoDB;
 
-              CREATE TABLE retiros_ciclo
+  CREATE TABLE retiros_ciclo
               (
                 id BIGINT
                 UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  correlativo VARCHAR
+                (50) NULL,
   estudiante_id BIGINT UNSIGNED NULL,
   carrera_id BIGINT UNSIGNED NULL,
   usuario_id BIGINT UNSIGNED NULL,
@@ -289,7 +362,7 @@ CREATE TABLE facultades
                   (
                     id BIGINT
                     UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  correlativo VARCHAR(50) GENERATED ALWAYS AS (CONCAT('EQ-', YEAR(COALESCE(fecha_solicitud, created_at)), '-', LPAD(id, 4, '0'))) STORED,
+  correlativo VARCHAR(50) NULL,
   estudiante_id BIGINT UNSIGNED NULL,
   usuario_id BIGINT UNSIGNED NULL,
   fecha_solicitud DATE NULL,
@@ -359,7 +432,7 @@ CREATE TABLE facultades
                       (
                         id BIGINT
                         UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  correlativo VARCHAR(50) GENERATED ALWAYS AS (CONCAT('ABS-', YEAR(fecha), '-', LPAD(id, 4, '0'))) STORED,
+  correlativo VARCHAR(50) NULL,
   estudiante_id BIGINT UNSIGNED NULL,
   facultad_id BIGINT UNSIGNED NULL,
   usuario_id BIGINT UNSIGNED NULL,

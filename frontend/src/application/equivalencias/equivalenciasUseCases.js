@@ -1,5 +1,7 @@
 import {
+  actualizarEquivalencia as apiActualizar,
   crearEquivalencia as apiCrear,
+  eliminarEquivalencia as apiEliminar,
   listarEquivalencias,
   obtenerEquivalencia,
 } from "../../infrastructure/api/equivalenciaApi.js";
@@ -10,10 +12,10 @@ export function crearEquivalencia(payload) {
   return apiCrear(payload);
 }
 
-export function modificarEquivalencia(payload) {
-  return Promise.resolve(payload);
+export function modificarEquivalencia(id, payload) {
+  return apiActualizar(id, payload);
 }
 
-export function imprimirEquivalencia(payload) {
-  return Promise.resolve(payload);
+export function eliminarEquivalencia(id) {
+  return apiEliminar(id);
 }

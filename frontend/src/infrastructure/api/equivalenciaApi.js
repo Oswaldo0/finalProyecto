@@ -19,3 +19,15 @@ export function crearEquivalencia(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function actualizarEquivalencia(id, payload) {
+  return requestJson(`${BASE}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function eliminarEquivalencia(id) {
+  return requestJson(`${BASE}/${id}`, { method: "DELETE" });
+}

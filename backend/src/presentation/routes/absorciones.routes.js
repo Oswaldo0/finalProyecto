@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as service from "../../application/absorciones/absorcionService.js";
+import { requireRoles } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
@@ -34,7 +35,7 @@ router.get("/:id/pdf", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), async (req, res, next) => {
   try {
     const absorcion = await service.crear(req.body);
     res.status(201).json(absorcion);
@@ -43,7 +44,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), async (req, res, next) => {
   try {
     const absorcion = await service.actualizar(Number(req.params.id), req.body);
     res.json(absorcion);
@@ -52,7 +53,7 @@ router.put("/:id", async (req, res, next) => {
   }
 });
 
-router.delete("/:id", async (req, res, next) => {
+router.delete("/:id", requireRoles("ADMIN"), async (req, res, next) => {
   try {
     await service.eliminar(Number(req.params.id));
     res.json({ message: "Absorción eliminada." });

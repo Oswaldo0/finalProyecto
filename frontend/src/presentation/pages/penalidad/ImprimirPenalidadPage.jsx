@@ -2,6 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listarPenalidades, obtenerPenalidad } from "../../../application/penalidad/penalidadUseCases.js";
 
+function separarNombreCompleto(nombre = "") {
+  const partes = String(nombre).trim().split(/\s+/).filter(Boolean);
+  if (partes.length <= 1) {
+    return { nombres: partes[0] ?? "", apellidos: "" };
+  }
+  const mitad = Math.ceil(partes.length / 2);
+  return {
+    nombres: partes.slice(0, mitad).join(" "),
+    apellidos: partes.slice(mitad).join(" "),
+  };
+}
+
 function DocumentoPenalidad({ doc }) {
   const numAsignaturas = doc.asignaturas.length;
   const enLetras = numAsignaturas === 1 ? "una" : numAsignaturas === 2 ? "dos" : numAsignaturas === 3 ? "tres" : numAsignaturas === 4 ? "cuatro" : String(numAsignaturas);
@@ -102,6 +114,9 @@ export function ImprimirPenalidadPage() {
     try {
       const pen = await obtenerPenalidad(id);
       // Mapear campos del API al formato que espera DocumentoPenalidad
+      const secretario = separarNombreCompleto(pen.secretario_nombre ?? "");
+      const alumno = separarNombreCompleto(pen.alumno_nombre ?? "");
+      const decano = separarNombreCompleto(pen.decano_nombre ?? "");
       const doc = {
         id: pen.id,
         correlativo: pen.correlativo,
@@ -110,13 +125,13 @@ export function ImprimirPenalidadPage() {
         carrera: pen.carrera_nombre,
         cicloReingreso: pen.ciclo_reingreso,
         estado: pen.estado,
-        secretarioNombres: pen.secretario_nombre ?? "",
-        secretarioApellidos: "",
-        decanoNombres: pen.decano_nombre ?? "",
-        decanoApellidos: "",
+        secretarioNombres: secretario.nombres,
+        secretarioApellidos: secretario.apellidos,
+        decanoNombres: decano.nombres,
+        decanoApellidos: decano.apellidos,
         cantidadAniosEgreso: pen.cantidad_anios_egreso,
-        alumnoNombres: pen.alumno_nombre ?? "",
-        alumnoApellidos: "",
+        alumnoNombres: alumno.nombres,
+        alumnoApellidos: alumno.apellidos,
         mesEgreso: pen.mes_egreso,
         anioEgreso: pen.anio_egreso,
         aniosEgresado: pen.anios_egresado,

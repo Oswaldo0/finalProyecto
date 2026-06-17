@@ -45,6 +45,7 @@ export function CrearPenalidadPage() {
   const [form, setForm] = useState(INICIAL);
   const [errores, setErrores] = useState({});
   const [asignaturas, setAsignaturas] = useState([{ nombre: "", uv: "" }]);
+  const [errorAsignaturas, setErrorAsignaturas] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState("");
   const [mensajeError, setMensajeError] = useState("");
@@ -57,16 +58,19 @@ export function CrearPenalidadPage() {
 
   function agregarAsignatura() {
     setAsignaturas((prev) => [...prev, { nombre: "", uv: "" }]);
+    setErrorAsignaturas("");
   }
 
   function eliminarAsignatura(index) {
     setAsignaturas((prev) => prev.filter((_, i) => i !== index));
+    setErrorAsignaturas("");
   }
 
   function handleAsignaturaChange(index, field, value) {
     setAsignaturas((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
+    setErrorAsignaturas("");
   }
 
   function separarNombreCompleto(nombre = "") {
@@ -91,6 +95,13 @@ export function CrearPenalidadPage() {
     const hayErrores = Object.values(nuevosErrores).some((err) => err !== "");
     if (hayErrores) return;
 
+    const asignaturasValidas = asignaturas.filter((a) => a.nombre.trim() !== "");
+    if (asignaturasValidas.length === 0) {
+      setErrorAsignaturas("Debe registrar al menos una asignatura.");
+      return;
+    }
+    setErrorAsignaturas("");
+
     setGuardando(true);
     setMensajeError("");
     try {
@@ -110,12 +121,10 @@ export function CrearPenalidadPage() {
           anios_egresado: Number(form.aniosEgresado),
           estado: "BORRADOR",
         },
-        asignaturas: asignaturas
-          .filter((a) => a.nombre.trim() !== "")
-          .map((a) => ({
-            asignatura_nombre: a.nombre.trim(),
-            uv: a.uv !== "" ? Number(a.uv) : null,
-          })),
+        asignaturas: asignaturasValidas.map((a) => ({
+          asignatura_nombre: a.nombre.trim(),
+          uv: a.uv !== "" ? Number(a.uv) : null,
+        })),
       };
       await crearPenalidad(payload);
       setMensajeExito("Penalidad creada correctamente.");
@@ -373,6 +382,9 @@ export function CrearPenalidadPage() {
                 </div>
               ))}
             </div>
+            {errorAsignaturas && (
+              <p className="mt-2 text-xs text-red-600">{errorAsignaturas}</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2">
