@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listarPenalidades, obtenerPenalidad } from "../../../application/penalidad/penalidadUseCases.js";
+import logoUrl from "../../../assets/images/LOGO_USO.png";
+import { openPrintWindow } from "../../utils/printDocument.js";
 
 function separarNombreCompleto(nombre = "") {
   const partes = String(nombre).trim().split(/\s+/).filter(Boolean);
@@ -14,85 +16,108 @@ function separarNombreCompleto(nombre = "") {
   };
 }
 
+function numeroEnLetras(numero) {
+  const numeros = [
+    "cero",
+    "una",
+    "dos",
+    "tres",
+    "cuatro",
+    "cinco",
+    "seis",
+    "siete",
+    "ocho",
+    "nueve",
+    "diez",
+  ];
+  return numeros[numero] ?? String(numero);
+}
+
+function totalUnidadesValorativas(asignaturas) {
+  return asignaturas.reduce((total, asignatura) => total + Number(asignatura.uv || 0), 0);
+}
+
 function DocumentoPenalidad({ doc }) {
-  const numAsignaturas = doc.asignaturas.length;
-  const enLetras = numAsignaturas === 1 ? "una" : numAsignaturas === 2 ? "dos" : numAsignaturas === 3 ? "tres" : numAsignaturas === 4 ? "cuatro" : String(numAsignaturas);
+  const asignaturasEnLetras = numeroEnLetras(doc.asignaturas.length);
+  const totalUv = totalUnidadesValorativas(doc.asignaturas);
 
   return (
-    <div className="mx-auto max-w-2xl bg-white px-10 py-8 font-serif text-sm leading-relaxed text-slate-900">
-      {/* Encabezado */}
-      <div className="mb-1 flex justify-between text-xs">
-        <span className="font-bold uppercase tracking-widest">MEMORANDO:</span>
-        <span>{doc.correlativo} ({doc.anioEgreso})</span>
+    <div className="mx-auto max-w-2xl bg-white px-12 py-10 font-serif text-[12px] leading-relaxed text-slate-950">
+      <div className="mb-5 flex justify-center">
+        <img src={logoUrl} alt="Logo USO" className="h-[72px] w-auto" />
       </div>
-      <div className="mb-4 border-b border-slate-400" />
+      <h1 className="mb-4 text-center text-base font-bold uppercase tracking-wide">
+        Memorando de penalización
+      </h1>
+      <div className="mb-2 flex justify-between text-xs">
+        <span className="font-bold uppercase tracking-widest">MEMORANDO</span>
+        <span className="font-semibold">{doc.correlativo}</span>
+      </div>
+      <div className="mb-4 border-b border-slate-500" />
 
-      {/* Campos del memorando */}
-      <table className="mb-1 w-full text-xs" style={{ borderCollapse: "collapse" }}>
+      <table className="mb-3 w-full text-xs" style={{ borderCollapse: "collapse" }}>
         <tbody>
           <tr>
-            <td className="w-20 py-0.5 align-top font-bold">PARA:</td>
-            <td className="py-0.5">
+            <td className="w-24 py-1 align-top font-bold">PARA:</td>
+            <td className="py-1">
               {doc.secretarioNombres} {doc.secretarioApellidos}<br />
               <span className="font-semibold uppercase">Secretario General</span>
             </td>
           </tr>
           <tr>
-            <td className="w-20 py-0.5 align-top font-bold">DE:</td>
-            <td className="py-0.5">{doc.decanoNombres} {doc.decanoApellidos}</td>
+            <td className="w-24 py-1 align-top font-bold">DE:</td>
+            <td className="py-1">{doc.decanoNombres} {doc.decanoApellidos}</td>
           </tr>
           <tr>
-            <td className="w-20 py-0.5 align-top font-bold">ASUNTO:</td>
-            <td className="py-0.5 font-semibold uppercase">
+            <td className="w-24 py-1 align-top font-bold">ASUNTO:</td>
+            <td className="py-1 font-semibold uppercase">
               Penalización por más de {doc.cantidadAniosEgreso} años de egreso
             </td>
           </tr>
           <tr>
-            <td className="w-20 py-0.5 align-top font-bold">FECHA:</td>
-            <td className="py-0.5">{doc.fecha}</td>
+            <td className="w-24 py-1 align-top font-bold">FECHA:</td>
+            <td className="py-1">{doc.fecha}</td>
           </tr>
         </tbody>
       </table>
-      <div className="mb-4 border-b border-slate-400" />
+      <div className="mb-5 border-b border-slate-500" />
 
-      {/* Cuerpo */}
-      <p className="mb-3 text-justify text-xs">
+      <p className="mb-3 text-justify">
         Respetuosamente informo que el bachiller{" "}
         <strong>{doc.alumnoNombres} {doc.alumnoApellidos}</strong>{" "}
         ha solicitado el reingreso a la carrera de{" "}
         <strong>{doc.carrera}</strong>.
       </p>
 
-      <p className="mb-4 text-justify text-xs">
-        El bachiller egresó el <strong>{doc.mesEgreso}</strong> de{" "}
+      <p className="mb-4 text-justify">
+        El bachiller egresó en <strong>{doc.mesEgreso}</strong> de{" "}
         <strong>{doc.anioEgreso}</strong>, por lo que tiene a esta fecha,{" "}
         <strong>{doc.aniosEgresado}</strong> años de haber egresado. Por tal razón, y de acuerdo
-        al artículo 25 de Reglamento de Administración Académica, que en el literal a, dice que
-        aquellos que tengan entre tres y otros años de egreso, deberán cursar las asignaturas para
-        efecto de penalización, se les asigna que el bachiller debe aprobar a las aulas en el
-        presente ciclo <strong>{doc.cicloReingreso}</strong> o cursar las siguientes asignaturas:
+        al artículo 25 del Reglamento de Administración Académica, que en el literal a, dice que
+        aquellos que tengan entre tres y cinco años de egreso, deberán cursar{" "}
+        <strong>{totalUv}</strong> unidades valorativas para efectos de actualización, se dictamina
+        que el bachiller debe regresar a las aulas en el presente ciclo{" "}
+        <strong>{doc.cicloReingreso}</strong> a cursar las siguientes asignaturas:
       </p>
 
-      {/* Lista numerada de asignaturas */}
-      <ol className="mb-4 list-none pl-6 text-xs" style={{ listStyleType: "none" }}>
-        {doc.asignaturas.map((a, i) => (
-          <li key={i} className="flex justify-between py-0.5">
-            <span>{i + 1}. {a.nombre}</span>
-            <span className="mr-8">{String(a.uv).padStart(2, "0")}</span>
+      <ol className="mb-4 list-none pl-8" style={{ listStyleType: "none" }}>
+        {doc.asignaturas.map((asignatura, index) => (
+          <li key={index} className="grid grid-cols-[1fr_70px] py-0.5">
+            <span>{index + 1}. {asignatura.nombre}</span>
+            <span className="text-right">{String(asignatura.uv).padStart(2, "0")}</span>
           </li>
         ))}
       </ol>
 
-      <p className="mb-6 text-justify text-xs">
-        Solicita se coordine con la Facultad de Tecnología Informática, para generar las
-        condiciones informáticas que permitan al bachiller inscribir las {enLetras} asignaturas.
+      <p className="mb-8 text-justify">
+        Solicito se coordine con la Unidad de Tecnología Informática, para generar las condiciones
+        informáticas que permitan al bachiller inscribir las {asignaturasEnLetras} asignaturas.
       </p>
 
-      <p className="text-xs">Atentamente,</p>
+      <p>Atentamente,</p>
     </div>
   );
 }
-
 
 export function ImprimirPenalidadPage() {
   const navigate = useNavigate();
@@ -113,11 +138,11 @@ export function ImprimirPenalidadPage() {
     setCargandoDoc(true);
     try {
       const pen = await obtenerPenalidad(id);
-      // Mapear campos del API al formato que espera DocumentoPenalidad
       const secretario = separarNombreCompleto(pen.secretario_nombre ?? "");
       const alumno = separarNombreCompleto(pen.alumno_nombre ?? "");
       const decano = separarNombreCompleto(pen.decano_nombre ?? "");
-      const doc = {
+
+      setDocSeleccionado({
         id: pen.id,
         correlativo: pen.correlativo,
         fecha: pen.fecha ? pen.fecha.slice(0, 10) : "",
@@ -135,12 +160,11 @@ export function ImprimirPenalidadPage() {
         mesEgreso: pen.mes_egreso,
         anioEgreso: pen.anio_egreso,
         aniosEgresado: pen.anios_egresado,
-        asignaturas: (pen.asignaturas ?? []).map((a) => ({
-          nombre: a.asignatura_nombre,
-          uv: a.uv ?? 0,
+        asignaturas: (pen.asignaturas ?? []).map((asignatura) => ({
+          nombre: asignatura.asignatura_nombre,
+          uv: asignatura.uv ?? 0,
         })),
-      };
-      setDocSeleccionado(doc);
+      });
     } catch {
       alert("No se pudo cargar el documento de penalidad.");
     } finally {
@@ -150,37 +174,38 @@ export function ImprimirPenalidadPage() {
 
   function ejecutarImpresion() {
     if (!docSeleccionado) return;
-    const d = docSeleccionado;
-    const numAsignaturas = d.asignaturas.length;
-    const enLetras = ["una","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez"][numAsignaturas - 1] ?? String(numAsignaturas);
 
-    const ventana = window.open("", "_blank", "width=850,height=700");
-    ventana.document.write(`
-      <!DOCTYPE html>
-      <html lang="es">
-      <head>
-        <meta charset="UTF-8" />
-        <title>Memorando ${d.correlativo}</title>
-        <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: Georgia, serif; font-size: 12px; color: #111; padding: 60px 70px; }
-          .memo-header { display: flex; justify-content: space-between; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-          hr { border: none; border-top: 1px solid #555; margin-bottom: 14px; }
-          .campo { display: table; width: 100%; margin-bottom: 2px; font-size: 12px; }
-          .campo-label { display: table-cell; width: 80px; font-weight: bold; vertical-align: top; }
+    const d = docSeleccionado;
+    const asignaturasEnLetras = numeroEnLetras(d.asignaturas.length);
+    const totalUv = totalUnidadesValorativas(d.asignaturas);
+    const asignaturasHtml = d.asignaturas
+      .map(
+        (asignatura, index) =>
+          `<div class="asig-row"><span>${index + 1}. ${asignatura.nombre}</span><span class="asig-uv">${String(asignatura.uv).padStart(2, "0")}</span></div>`,
+      )
+      .join("");
+
+    openPrintWindow({
+      title: `Memorando ${d.correlativo}`,
+      documentTitle: "Memorando de penalización",
+      styles: `
+          body { font-size: 12px; line-height: 1.65; }
+          .memo-header { display: flex; justify-content: space-between; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+          hr { border: none; border-top: 1px solid #555; margin-bottom: 16px; }
+          .campo { display: table; width: 100%; margin-bottom: 4px; font-size: 12px; }
+          .campo-label { display: table-cell; width: 96px; font-weight: bold; vertical-align: top; }
           .campo-valor { display: table-cell; vertical-align: top; }
-          .body-text { text-align: justify; margin-bottom: 12px; font-size: 12px; line-height: 1.6; }
-          .asignaturas { margin: 0 0 14px 40px; }
-          .asig-row { display: flex; justify-content: space-between; padding: 1px 0; }
-          .asig-uv { margin-right: 80px; }
-          .atentos { margin-top: 20px; }
-          @media print { body { padding: 30px 50px; } }
-        </style>
-      </head>
-      <body>
+          .body-text { text-align: justify; margin-bottom: 12px; }
+          .asignaturas { margin: 0 0 16px 42px; max-width: 560px; }
+          .asig-row { display: grid; grid-template-columns: 1fr 70px; padding: 1px 0; }
+          .asig-uv { text-align: right; }
+          .atentos { margin-top: 26px; }
+          @media print { body { padding: 24px; } }
+      `,
+      body: `
         <div class="memo-header">
-          <span>MEMORANDO:</span>
-          <span>${d.correlativo} (${d.anioEgreso})</span>
+          <span>MEMORANDO</span>
+          <span>${d.correlativo}</span>
         </div>
         <hr />
 
@@ -194,24 +219,20 @@ export function ImprimirPenalidadPage() {
           Respetuosamente informo que el bachiller <strong>${d.alumnoNombres} ${d.alumnoApellidos}</strong> ha solicitado el reingreso a la carrera de <strong>${d.carrera}</strong>.
         </p>
         <p class="body-text">
-          El bachiller egresó el <strong>${d.mesEgreso}</strong> de <strong>${d.anioEgreso}</strong>, por lo que tiene a esta fecha, <strong>${d.aniosEgresado}</strong> años de haber egresado. Por tal razón, y de acuerdo al artículo 25 de Reglamento de Administración Académica, que en el literal a, dice que aquellos que tengan entre tres y otros años de egreso, deberán cursar las asignaturas para efecto de penalización, se les asigna que el bachiller debe aprobar a las aulas en el presente ciclo <strong>${d.cicloReingreso}</strong> o cursar las siguientes asignaturas:
+          El bachiller egresó en <strong>${d.mesEgreso}</strong> de <strong>${d.anioEgreso}</strong>, por lo que tiene a esta fecha, <strong>${d.aniosEgresado}</strong> años de haber egresado. Por tal razón, y de acuerdo al artículo 25 del Reglamento de Administración Académica, que en el literal a, dice que aquellos que tengan entre tres y cinco años de egreso, deberán cursar <strong>${totalUv}</strong> unidades valorativas para efectos de actualización, se dictamina que el bachiller debe regresar a las aulas en el presente ciclo <strong>${d.cicloReingreso}</strong> a cursar las siguientes asignaturas:
         </p>
 
         <div class="asignaturas">
-          ${d.asignaturas.map((a, i) => `<div class="asig-row"><span>${i + 1}. ${a.nombre}</span><span class="asig-uv">${String(a.uv).padStart(2, "0")}</span></div>`).join("")}
+          ${asignaturasHtml}
         </div>
 
         <p class="body-text">
-          Solicita se coordine con la Facultad de Tecnología Informática, para generar las condiciones informáticas que permitan al bachiller inscribir las ${enLetras} asignaturas.
+          Solicito se coordine con la Unidad de Tecnología Informática, para generar las condiciones informáticas que permitan al bachiller inscribir las ${asignaturasEnLetras} asignaturas.
         </p>
 
         <p class="atentos">Atentamente,</p>
-      </body>
-      </html>
-    `);
-    ventana.document.close();
-    ventana.focus();
-    setTimeout(() => ventana.print(), 400);
+      `,
+    });
   }
 
   return (
@@ -315,14 +336,12 @@ export function ImprimirPenalidadPage() {
         </div>
       </section>
 
-      {/* Modal de vista previa */}
       {docSeleccionado && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10">
           <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
-            {/* Barra de acciones del modal */}
             <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-slate-50 px-5 py-3">
               <span className="text-sm font-semibold text-slate-700">
-                Vista previa — {docSeleccionado.correlativo}
+                Vista previa - {docSeleccionado.correlativo}
               </span>
               <div className="flex gap-2">
                 <button
@@ -330,10 +349,7 @@ export function ImprimirPenalidadPage() {
                   onClick={ejecutarImpresion}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
                 >
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: "1rem" }}
-                  >
+                  <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>
                     print
                   </span>
                   Imprimir / Guardar PDF
@@ -348,7 +364,6 @@ export function ImprimirPenalidadPage() {
               </div>
             </div>
 
-            {/* Contenido del documento */}
             <div ref={printRef} className="p-2">
               <DocumentoPenalidad doc={docSeleccionado} />
             </div>

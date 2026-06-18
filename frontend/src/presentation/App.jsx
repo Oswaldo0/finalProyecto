@@ -13,6 +13,7 @@ import { ImprimirAbsorcionPage } from "./pages/absorciones/ImprimirAbsorcionPage
 import { ModificarAbsorcionPage } from "./pages/absorciones/ModificarAbsorcionPage.jsx";
 import { AbsorcionesPage } from "./pages/absorciones/AbsorcionesPage.jsx";
 import { AnotacionesPage } from "./pages/anotaciones/AnotacionesPage.jsx";
+import { CrearAnotacionPage } from "./pages/anotaciones/CrearAnotacionPage.jsx";
 import { ImprimirAnotacionPage } from "./pages/anotaciones/ImprimirAnotacionPage.jsx";
 import { ModificarAnotacionPage } from "./pages/anotaciones/ModificarAnotacionPage.jsx";
 import { LoginPage } from "./pages/auth/LoginPage.jsx";
@@ -111,6 +112,7 @@ export function App() {
                 <Route path="/equivalencias" element={<EquivalenciasPage />} />
                 <Route path="/equivalencias/crear" element={<CrearEquivalenciaPage />} />
                 <Route path="/equivalencias/modificar" element={<ModificarEquivalenciaPage />} />
+                <Route path="/equivalencias/modificar/:id" element={<ModificarEquivalenciaPage />} />
                 <Route path="/equivalencias/imprimir" element={<ImprimirEquivalenciaPage />} />
 
                 <Route path="/absorciones" element={<AbsorcionesPage />} />
@@ -120,8 +122,9 @@ export function App() {
                 <Route path="/absorciones/imprimir" element={<ImprimirAbsorcionPage />} />
 
                 <Route path="/anotaciones" element={<AnotacionesPage />} />
-                <Route path="/anotaciones/crear" element={<EmptySectionPage title="Crear anotación" />} />
+                <Route path="/anotaciones/crear" element={<CrearAnotacionPage />} />
                 <Route path="/anotaciones/modificar" element={<ModificarAnotacionPage />} />
+                <Route path="/anotaciones/modificar/:id" element={<ModificarAnotacionPage />} />
                 <Route path="/anotaciones/imprimir" element={<ImprimirAnotacionPage />} />
 
                 <Route path="/informes" element={<InformesPage />} />

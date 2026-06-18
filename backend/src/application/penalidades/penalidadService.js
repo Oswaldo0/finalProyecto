@@ -1,5 +1,13 @@
 import * as repo from "../../infrastructure/repositories/penalidadRepository.js";
 import PDFDocument from "pdfkit";
+import {
+  assertNonNegativeDecimal,
+  assertPositiveInteger,
+  assertValidDate,
+  requireFields,
+  requireNonEmptyArray,
+  requireObject,
+} from "../shared/validation.js";
 
 export async function listar(filtros) {
   return repo.findAll(filtros);
@@ -112,6 +120,7 @@ export async function generarPdf(id, res) {
 }
 
 function validarCampos(p = {}) {
+  requireObject(p, "penalidad");
   const requeridos = [
     "secretario_nombre",
     "decano_nombre",
@@ -125,21 +134,18 @@ function validarCampos(p = {}) {
     "anios_egresado",
   ];
 
-  const faltantes = requeridos.filter((k) => p[k] === undefined || p[k] === "");
-  if (faltantes.length > 0) {
-    const err = new Error(`Campos requeridos: ${faltantes.join(", ")}`);
-    err.status = 422;
-    throw err;
-  }
+  requireFields(p, requeridos);
+  assertValidDate(p.fecha, "fecha", { required: true });
+  assertPositiveInteger(Number(p.cantidad_anios_egreso), "cantidad_anios_egreso");
+  assertPositiveInteger(Number(p.anio_egreso), "anio_egreso");
+  assertPositiveInteger(Number(p.anios_egresado), "anios_egresado");
 }
 
 function validarAsignaturas(asignaturas = []) {
-  const asignaturasValidas = (asignaturas ?? []).filter(
-    (a) => String(a?.asignatura_nombre ?? "").trim() !== ""
-  );
-  if (asignaturasValidas.length === 0) {
-    const err = new Error("Debe registrar al menos una asignatura.");
-    err.status = 422;
-    throw err;
-  }
+  requireNonEmptyArray(asignaturas, "asignaturas");
+  asignaturas.forEach((asignatura, index) => {
+    requireObject(asignatura, `asignaturas[${index}]`);
+    requireFields(asignatura, ["asignatura_nombre"]);
+    assertNonNegativeDecimal(asignatura.uv, `asignaturas[${index}].uv`);
+  });
 }

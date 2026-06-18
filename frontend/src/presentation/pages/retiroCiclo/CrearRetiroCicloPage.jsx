@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { crearRetiro } from "../../../application/retiroCiclo/retiroCicloUseCases.js";
+import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const FORMULARIO_INICIAL = {
   expediente: "",
@@ -19,11 +20,6 @@ const FORMULARIO_INICIAL = {
   facultad: "",
 };
 
-const CAMPOS_MAYUSCULAS = new Set([
-  "alumnoNombres", "alumnoApellidos", "carrera",
-  "decanoNombres", "decanoApellidos", "facultad",
-]);
-
 export function CrearRetiroCicloPage() {
   const navigate = useNavigate();
   const [showCancelNotice, setShowCancelNotice] = useState(false);
@@ -34,13 +30,14 @@ export function CrearRetiroCicloPage() {
   const [mensajeError, setMensajeError] = useState("");
 
   function handleInputChange(field, value) {
-    const finalValue = CAMPOS_MAYUSCULAS.has(field) ? value.toUpperCase() : value;
+    const finalValue = normalizeByField(field, value, { preserve: ["fecha"] });
     setFormulario((prev) => ({ ...prev, [field]: finalValue }));
   }
 
   function handleMateriaChange(index, field, value) {
+    const finalValue = normalizeByField(field, value);
     setMaterias((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+      prev.map((item, i) => (i === index ? { ...item, [field]: finalValue } : item)),
     );
   }
 
@@ -236,11 +233,15 @@ export function CrearRetiroCicloPage() {
                   <input
                     type="number"
                     min="0"
-                    step="0.25"
+                    step="0.01"
+                    inputMode="decimal"
                     className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
                     placeholder="UV"
                     value={materia.uv}
                     onChange={(e) => handleMateriaChange(index, "uv", e.target.value)}
+                    onKeyDown={(e) => {
+                      if (["e", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                   <button
                     type="button"

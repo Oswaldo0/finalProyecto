@@ -89,7 +89,6 @@ export function ImprimirAbsorcionPage() {
             <div><strong>${abs.decano_nombre}</strong></div>
             <div>${abs.facultad_firma_nombre}</div>
           </div>
-          <div class="footer">Impreso desde el sistema de gestión académica.</div>
         </body>
         </html>
       `);

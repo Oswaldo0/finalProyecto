@@ -1,5 +1,12 @@
 import * as repo from "../../infrastructure/repositories/absorcionRepository.js";
 import PDFDocument from "pdfkit";
+import {
+  assertNonNegativeDecimal,
+  assertValidDate,
+  requireFields,
+  requireObject,
+  validationError,
+} from "../shared/validation.js";
 
 export async function listar(filtros) {
   return repo.findAll(filtros);
@@ -18,6 +25,7 @@ export async function obtener(id) {
 export async function crear(body) {
   const { absorcion, absorbidas = [], noExistentes = [], reprobadas = [] } = body;
   validarCampos(absorcion);
+  validarDetalles({ absorbidas, noExistentes, reprobadas });
   return repo.create({ absorcion, absorbidas, noExistentes, reprobadas });
 }
 
@@ -25,6 +33,7 @@ export async function actualizar(id, body) {
   await obtener(id);
   const { absorcion, absorbidas = [], noExistentes = [], reprobadas = [] } = body;
   validarCampos(absorcion);
+  validarDetalles({ absorbidas, noExistentes, reprobadas });
   return repo.update(id, { absorcion, absorbidas, noExistentes, reprobadas });
 }
 
@@ -107,6 +116,7 @@ export async function generarPdf(id, res) {
 }
 
 function validarCampos(absorcion = {}) {
+  requireObject(absorcion, "absorcion");
   const requeridos = [
     "facultad_nombre",
     "ciclo",
@@ -121,10 +131,30 @@ function validarCampos(absorcion = {}) {
     "facultad_firma_nombre",
   ];
 
-  const faltantes = requeridos.filter((campo) => absorcion[campo] === undefined || absorcion[campo] === "");
-  if (faltantes.length > 0) {
-    const err = new Error(`Campos requeridos: ${faltantes.join(", ")}`);
-    err.status = 422;
-    throw err;
+  requireFields(absorcion, requeridos);
+  assertValidDate(absorcion.fecha, "fecha", { required: true });
+}
+
+function validarDetalles({ absorbidas = [], noExistentes = [], reprobadas = [] }) {
+  if (absorbidas.length + noExistentes.length + reprobadas.length === 0) {
+    throw validationError("Debe registrar al menos una asignatura en el dictamen.");
   }
+
+  absorbidas.forEach((item, index) => {
+    requireObject(item, `absorbidas[${index}]`);
+    requireFields(item, ["asignatura_cursada", "asignatura_absorbida"]);
+    assertNonNegativeDecimal(item.nota_asignada, `absorbidas[${index}].nota_asignada`);
+  });
+
+  noExistentes.forEach((item, index) => {
+    requireObject(item, `noExistentes[${index}]`);
+    requireFields(item, ["asignatura_nombre"]);
+    assertNonNegativeDecimal(item.nota, `noExistentes[${index}].nota`);
+  });
+
+  reprobadas.forEach((item, index) => {
+    requireObject(item, `reprobadas[${index}]`);
+    requireFields(item, ["asignatura_nombre"]);
+    assertNonNegativeDecimal(item.nota, `reprobadas[${index}].nota`);
+  });
 }

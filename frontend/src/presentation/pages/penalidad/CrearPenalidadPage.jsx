@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { crearPenalidad } from "../../../application/penalidad/penalidadUseCases.js";
+import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const ANIO_ACTUAL = new Date().getFullYear();
 
@@ -51,8 +52,11 @@ export function CrearPenalidadPage() {
   const [mensajeError, setMensajeError] = useState("");
 
   function handleChange(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    const error = campoError(field, value);
+    const finalValue = normalizeByField(field, value, {
+      preserve: ["estudianteId", "carreraId", "fecha", "cantidadAniosEgreso", "anioEgreso", "aniosEgresado"],
+    });
+    setForm((prev) => ({ ...prev, [field]: finalValue }));
+    const error = campoError(field, finalValue);
     setErrores((prev) => ({ ...prev, [field]: error }));
   }
 
@@ -67,8 +71,9 @@ export function CrearPenalidadPage() {
   }
 
   function handleAsignaturaChange(index, field, value) {
+    const finalValue = normalizeByField(field, value);
     setAsignaturas((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+      prev.map((item, i) => (i === index ? { ...item, [field]: finalValue } : item))
     );
     setErrorAsignaturas("");
   }
@@ -364,11 +369,15 @@ export function CrearPenalidadPage() {
                   <input
                     type="number"
                     min="0"
-                    step="0.25"
+                    step="0.01"
+                    inputMode="decimal"
                     className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
                     placeholder="UV"
                     value={asignatura.uv}
                     onChange={(e) => handleAsignaturaChange(index, "uv", e.target.value)}
+                    onKeyDown={(e) => {
+                      if (["e", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                   <button
                     type="button"

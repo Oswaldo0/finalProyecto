@@ -9,12 +9,11 @@ import logoUrl from "../../../assets/images/LOGO_USO.png";
 function DocumentoRetiroCiclo({ doc }) {
   return (
     <div className="mx-auto max-w-2xl bg-white font-serif text-slate-900" style={{ overflow: "hidden" }}>
-      {/* Encabezado: banda oscura con logo centrado */}
-      <div style={{ background: "linear-gradient(135deg, #1b4f5a 0%, #27795c 100%)", padding: "18px 0", display: "flex", justifyContent: "center", alignItems: "center" }}>
+      <div style={{ padding: "20px 0 10px", display: "flex", justifyContent: "center", alignItems: "center" }}>
         <img src={logoUrl} alt="Logo USO" style={{ height: "80px" }} />
       </div>
 
-      <div style={{ padding: "28px 56px 40px" }}>
+      <div style={{ padding: "10px 56px 40px" }}>
         {/* Título */}
         <h1 style={{ textAlign: "center", fontSize: "13px", fontWeight: "bold", textDecoration: "underline", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "20px" }}>
           Resolución
@@ -150,17 +149,15 @@ export function ImprimirRetiroCicloPage() {
             color: #111;
             background: #fff;
           }
-          /* Encabezado con banda verde/teal y logo centrado */
           .doc-header {
-            background: linear-gradient(135deg, #1b4f5a 0%, #27795c 100%);
-            padding: 18px 0;
+            padding: 20px 0 10px;
             display: flex;
             justify-content: center;
             align-items: center;
           }
           .doc-header img { height: 80px; }
           /* Contenido principal */
-          .doc-body { padding: 28px 56px 40px; }
+          .doc-body { padding: 10px 56px 40px; }
           .doc-title {
             text-align: center;
             font-size: 13px;

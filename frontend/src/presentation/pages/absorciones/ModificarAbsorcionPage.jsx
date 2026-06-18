@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { obtenerAbsorcion, modificarAbsorcion } from "../../../application/absorciones/absorcionesUseCases.js";
+import { normalizeByField, toUppercaseText } from "../../utils/formNormalizers.js";
 
 const TABLA_ABSORCION_INICIAL = [
   {
@@ -122,19 +123,7 @@ export function ModificarAbsorcionPage() {
   }
 
   function handleInputChange(field, value) {
-    const upperFields = [
-      "facultad",
-      "ciclo",
-      "nombreAlumno",
-      "apellidosAlumno",
-      "carreraOrigen",
-      "planOrigen",
-      "planSolicitado",
-      "decanoNombre",
-      "facultadFirma",
-    ];
-
-    const nextValue = upperFields.includes(field) ? String(value).toUpperCase() : value;
+    const nextValue = normalizeByField(field, value, { preserve: ["fecha"] });
     setFormulario((prev) => ({ ...prev, [field]: nextValue }));
   }
 
@@ -144,7 +133,7 @@ export function ModificarAbsorcionPage() {
         i === index
           ? {
               ...item,
-              [field]: field === "notaAsignada" ? value : String(value).toUpperCase(),
+              [field]: field === "notaAsignada" ? value : toUppercaseText(value),
             }
           : item,
       ),
@@ -157,7 +146,7 @@ export function ModificarAbsorcionPage() {
         i === index
           ? {
               ...item,
-              [field]: field === "nota" ? value : String(value).toUpperCase(),
+              [field]: field === "nota" ? value : toUppercaseText(value),
             }
           : item,
       ),
@@ -170,7 +159,7 @@ export function ModificarAbsorcionPage() {
         i === index
           ? {
               ...item,
-              [field]: field === "nota" ? value : String(value).toUpperCase(),
+              [field]: field === "nota" ? value : toUppercaseText(value),
             }
           : item,
       ),

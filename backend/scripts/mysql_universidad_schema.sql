@@ -145,6 +145,45 @@ CREATE TABLE facultades
           (email)
 ) ENGINE=InnoDB;
 
+CREATE TABLE anotaciones_catalogos
+(
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  tipo ENUM('observadores', 'facultades', 'horarios') NOT NULL,
+  valor VARCHAR(180) NOT NULL,
+  estado ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_anotaciones_catalogo_tipo_valor (tipo, valor),
+  KEY idx_anotaciones_catalogo_tipo (tipo)
+) ENGINE=InnoDB;
+
+CREATE TABLE anotaciones
+(
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  correlativo VARCHAR(50) NULL,
+  usuario_id BIGINT UNSIGNED NULL,
+  observador VARCHAR(180) NOT NULL,
+  fecha DATE NOT NULL,
+  hora_inicio VARCHAR(40) NOT NULL,
+  hora_fin VARCHAR(40) NOT NULL,
+  asignatura_grupo VARCHAR(180) NOT NULL,
+  facultad VARCHAR(180) NOT NULL,
+  horario VARCHAR(80) NOT NULL,
+  docente VARCHAR(180) NOT NULL,
+  aula VARCHAR(80) NOT NULL,
+  ciclo VARCHAR(60) NOT NULL,
+  observaciones TEXT NOT NULL,
+  estado ENUM('BORRADOR', 'EMITIDA', 'ANULADA') NOT NULL DEFAULT 'BORRADOR',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_anotaciones_correlativo (correlativo),
+  CONSTRAINT fk_anotaciones_usuario
+    FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
+  KEY idx_anotaciones_fecha (fecha),
+  KEY idx_anotaciones_observador (observador),
+  KEY idx_anotaciones_facultad (facultad)
+) ENGINE=InnoDB;
+
           CREATE TABLE auditoria_eventos
           (
             id BIGINT

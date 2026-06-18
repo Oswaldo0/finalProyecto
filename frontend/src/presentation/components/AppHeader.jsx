@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { navRoutes } from "../routes.js";
 import logo from "../../assets/images/LOGO_USO.png";
+import usuariosIcon from "../../assets/images/usoUsuarios.png";
 
 export function AppHeader({ user, onLogout }) {
   const navigate = useNavigate();
@@ -35,11 +36,19 @@ export function AppHeader({ user, onLogout }) {
               to={item.path}
               className={({ isActive }) =>
                 isActive
-                  ? "rounded-full bg-slate-900 px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-slate-700"
-                  : "rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+                  ? "inline-flex min-w-24 flex-col items-center justify-center gap-1 rounded-lg border border-amber-400 bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-slate-900 shadow-sm transition hover:bg-amber-100"
+                  : "inline-flex min-w-24 flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-slate-900"
               }
             >
-              {item.label}
+              {item.icon ? (
+                <img
+                  src={item.icon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`h-12 w-12 object-contain ${item.iconClassName ?? ""}`}
+                />
+              ) : null}
+              <span className="leading-tight">{item.label}</span>
             </NavLink>
           ))}
 
@@ -47,12 +56,13 @@ export function AppHeader({ user, onLogout }) {
             <button
               type="button"
               onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-              className="inline-flex max-w-[210px] items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+              className="inline-flex min-w-24 flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-slate-900"
               aria-haspopup="menu"
               aria-expanded={isProfileMenuOpen}
+              title={user?.nombre || user?.username || "Perfil"}
             >
-              <span className="truncate">{user?.nombre || user?.username || "Perfil"}</span>
-              <span className="text-xs text-slate-500">Perfil</span>
+              <img src={usuariosIcon} alt="" aria-hidden="true" className="h-12 w-12 object-contain" />
+              <span className="leading-tight">Perfil</span>
             </button>
 
             {isProfileMenuOpen ? (

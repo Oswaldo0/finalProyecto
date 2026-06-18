@@ -4,6 +4,12 @@ import {
   listarAuditoria,
   listarUsuarios,
 } from "../../../application/usuarios/usuariosUseCases.js";
+import {
+  CATALOGOS_INICIALES,
+  guardarCatalogosAnotaciones,
+  obtenerCatalogosAnotaciones,
+} from "../../../application/anotaciones/anotacionesUseCases.js";
+import { toUppercaseText } from "../../utils/formNormalizers.js";
 
 const FORM_INICIAL = {
   nombre: "",
@@ -17,6 +23,8 @@ const FORM_INICIAL = {
 export function UsuarioPage({ user }) {
   const [usuarios, setUsuarios] = useState([]);
   const [auditoria, setAuditoria] = useState([]);
+  const [catalogos, setCatalogos] = useState(CATALOGOS_INICIALES);
+  const [catalogoForm, setCatalogoForm] = useState({ observadores: "", facultades: "", horarios: "" });
   const [form, setForm] = useState(FORM_INICIAL);
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
@@ -35,14 +43,16 @@ export function UsuarioPage({ user }) {
 
   async function cargarDatos(mounted = true) {
     try {
-      const [usuariosResult, auditoriaResult] = await Promise.all([
+      const [usuariosResult, auditoriaResult, catalogosResult] = await Promise.all([
         listarUsuarios({ page: 1, limit: 50 }),
         listarAuditoria({ page: 1, limit: 20 }),
+        obtenerCatalogosAnotaciones(),
       ]);
 
       if (mounted) {
         setUsuarios(usuariosResult.data ?? []);
         setAuditoria(auditoriaResult.data ?? []);
+        setCatalogos(catalogosResult);
       }
     } catch (err) {
       if (mounted) setError(err.message || "No se pudo cargar la administración de usuarios.");
@@ -50,7 +60,36 @@ export function UsuarioPage({ user }) {
   }
 
   function handleChange(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    const finalValue = field === "nombre" ? toUppercaseText(value) : value;
+    setForm((prev) => ({ ...prev, [field]: finalValue }));
+  }
+
+  function handleCatalogoChange(tipo, value) {
+    setCatalogoForm((prev) => ({ ...prev, [tipo]: toUppercaseText(value) }));
+  }
+
+  async function agregarCatalogoItem(tipo) {
+    const valor = catalogoForm[tipo].trim();
+    if (!valor) return;
+
+    const actualizados = {
+      ...catalogos,
+      [tipo]: catalogos[tipo].includes(valor) ? catalogos[tipo] : [...catalogos[tipo], valor],
+    };
+
+    setCatalogos(actualizados);
+    setCatalogoForm((prev) => ({ ...prev, [tipo]: "" }));
+    await guardarCatalogosAnotaciones(actualizados);
+  }
+
+  async function eliminarCatalogoItem(tipo, valor) {
+    const actualizados = {
+      ...catalogos,
+      [tipo]: catalogos[tipo].filter((item) => item !== valor),
+    };
+
+    setCatalogos(actualizados);
+    await guardarCatalogosAnotaciones(actualizados);
   }
 
   async function handleSubmit(event) {
@@ -136,6 +175,45 @@ export function UsuarioPage({ user }) {
               emptyText="No hay eventos de auditoría."
             />
           </div>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">Catálogos para observación de clases</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Solo los administradores pueden agregar observadores, facultades y horarios para el apartado de Anotaciones.
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-3">
+              <CatalogManager
+                title="Observadores"
+                inputLabel="Nuevo observador"
+                value={catalogoForm.observadores}
+                items={catalogos.observadores}
+                onChange={(value) => handleCatalogoChange("observadores", value)}
+                onAdd={() => agregarCatalogoItem("observadores")}
+                onRemove={(item) => eliminarCatalogoItem("observadores", item)}
+              />
+              <CatalogManager
+                title="Facultades"
+                inputLabel="Nueva facultad"
+                value={catalogoForm.facultades}
+                items={catalogos.facultades}
+                onChange={(value) => handleCatalogoChange("facultades", value)}
+                onAdd={() => agregarCatalogoItem("facultades")}
+                onRemove={(item) => eliminarCatalogoItem("facultades", item)}
+              />
+              <CatalogManager
+                title="Horarios"
+                inputLabel="Nuevo horario"
+                value={catalogoForm.horarios}
+                items={catalogos.horarios}
+                onChange={(value) => handleCatalogoChange("horarios", value)}
+                onAdd={() => agregarCatalogoItem("horarios")}
+                onRemove={(item) => eliminarCatalogoItem("horarios", item)}
+              />
+            </div>
+          </section>
         </section>
       ) : null}
     </main>
@@ -163,6 +241,48 @@ function Input({ label, value, onChange, type = "text", required = true }) {
         required={required}
       />
     </label>
+  );
+}
+
+function CatalogManager({ title, inputLabel, value, items, onChange, onAdd, onRemove }) {
+  return (
+    <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <h4 className="text-sm font-semibold text-slate-800">{title}</h4>
+      <div className="mt-3 flex gap-2">
+        <input
+          type="text"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+          placeholder={inputLabel}
+        />
+        <button
+          type="button"
+          onClick={onAdd}
+          className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+        >
+          Agregar
+        </button>
+      </div>
+      <div className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white">
+        {items.length === 0 ? (
+          <p className="px-3 py-6 text-center text-sm text-slate-500">Sin registros.</p>
+        ) : (
+          items.map((item) => (
+            <div key={item} className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 last:border-b-0">
+              <span className="text-xs font-medium text-slate-700">{item}</span>
+              <button
+                type="button"
+                onClick={() => onRemove(item)}
+                className="rounded-md px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50"
+              >
+                Quitar
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
   );
 }
 

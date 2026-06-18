@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "nodemon src/presentation/server.js",
     "start": "node src/presentation/server.js",
+    "test": "node --test src/application/shared/validation.test.js",
     "migrate:auth": "node scripts/apply_auth_migration.mjs",
     "migrate:auditoria": "node scripts/apply_auditoria_migration.mjs",
+    "migrate:anotaciones": "node scripts/apply_anotaciones_migration.mjs",
     "migrate:correlativos": "node scripts/apply_correlativos_migration.mjs",
     "migrate:informes": "node scripts/apply_informes_migration.mjs"
   },

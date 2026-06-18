@@ -5,6 +5,7 @@ import {
   obtenerPenalidad,
   modificarPenalidad,
 } from "../../../application/penalidad/penalidadUseCases.js";
+import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const ANIO_ACTUAL = new Date().getFullYear();
 
@@ -111,8 +112,11 @@ export function ModificarPenalidadPage() {
   }
 
   function handleInputChange(field, value) {
-    setFormulario((prev) => ({ ...prev, [field]: value }));
-    const error = campoError(field, value);
+    const finalValue = normalizeByField(field, value, {
+      preserve: ["fecha", "cantidadAniosEgreso", "anioEgreso", "aniosEgresado"],
+    });
+    setFormulario((prev) => ({ ...prev, [field]: finalValue }));
+    const error = campoError(field, finalValue);
     setErrores((prev) => ({ ...prev, [field]: error }));
   }
 
@@ -125,9 +129,10 @@ export function ModificarPenalidadPage() {
   }
 
   function handleAsignaturaChange(index, field, value) {
+    const finalValue = normalizeByField(field, value);
     setAsignaturas((prev) =>
       prev.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [field]: value } : item,
+        itemIndex === index ? { ...item, [field]: finalValue } : item,
       ),
     );
   }
@@ -466,11 +471,15 @@ export function ModificarPenalidadPage() {
                   <input
                     type="number"
                     min="0"
-                    step="0.25"
+                    step="0.01"
+                    inputMode="decimal"
                     className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
                     placeholder="UV"
                     value={asignatura.uv}
                     onChange={(e) => handleAsignaturaChange(index, "uv", e.target.value)}
+                    onKeyDown={(e) => {
+                      if (["e", "+", "-"].includes(e.key)) e.preventDefault();
+                    }}
                   />
                   <button
                     type="button"
