@@ -1,128 +1,100 @@
 # Sistema Académico USO
 
-Aplicación web para gestionar documentos administrativos académicos: penalidades, retiros de ciclo, equivalencias y absorciones.
+Sistema web para gestionar procesos administrativos de coordinación académica en la Universidad de Sonsonate. Incluye autenticación, control de acceso, auditoría, consultas, anotaciones, equivalencias, absorciones, retiros de ciclo, penalidades, usuarios e informes.
 
-## Arquitectura
+## Tecnologías
 
-- `backend/src/presentation`: servidor Express, rutas y middleware.
-- `backend/src/application`: servicios y casos de uso.
-- `backend/src/infrastructure`: MySQL, repositorios y seguridad.
-- `frontend/src/presentation`: páginas, rutas y componentes React.
-- `frontend/src/application`: casos de uso del cliente.
-- `frontend/src/infrastructure`: clientes HTTP.
-- `frontend/src/domain`: modelos de dominio por módulo.
+- React y Vite para la interfaz web.
+- Node.js y Express para la API REST.
+- MySQL para persistencia.
+- JWT y `crypto.scrypt` para autenticación y protección de contraseñas.
+- PDFKit para generar documentos e informes.
 
-## Seguridad
+## Estructura
 
-- Autenticación por JWT firmado con HS256.
-- Contraseñas hasheadas con `crypto.scrypt`.
-- Middleware `requireAuth` para proteger APIs.
-- Middleware `requireRoles` para autorización por rol.
-- Auditoría de acciones sensibles: crear, actualizar, eliminar e imprimir.
+```text
+backend/
+  scripts/                 Migraciones y utilidades operativas
+  src/
+    application/           Reglas de negocio y servicios
+    infrastructure/        Base de datos, repositorios y seguridad
+    presentation/          Servidor HTTP, middleware y rutas
+frontend/
+  src/
+    application/           Casos de uso del cliente
+    assets/                Recursos visuales
+    infrastructure/        Comunicación con la API
+    presentation/          Componentes, páginas y rutas
+```
 
-Roles soportados:
+## Requisitos
 
-- `ADMIN`
-- `DECANO`
-- `SECRETARIO`
-- `OPERADOR`
-- `CONSULTA`
+- Node.js y npm.
+- MySQL 8 o una versión compatible.
 
-## Instalación
+## Configuración
 
-Backend:
+1. Instale las dependencias del backend y frontend:
 
 ```bash
 cd backend
-npm install
-npm run migrate:all
-npm run dev
+npm ci
+
+cd ../frontend
+npm ci
 ```
 
-Frontend:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-## Variables De Entorno
-
-Crear `backend/.env` basado en `backend/.env.example`.
-
-Variables mínimas:
+2. Cree `backend/.env` a partir de `backend/.env.example` y configure la conexión a MySQL, el secreto JWT y los orígenes permitidos.
 
 ```env
 PORT=3000
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 DB_SERVER=localhost
 DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=admin
+DB_USER=usuario_mysql
+DB_PASSWORD=contrasena_mysql
 DB_NAME=bd_uso_sonsonate
-JWT_SECRET=change_this_to_a_random_secret_with_at_least_32_chars
+JWT_SECRET=secreto_aleatorio_de_al_menos_32_caracteres
 AUTH_SEED_ADMIN_USERNAME=admin
-AUTH_SEED_ADMIN_PASSWORD=cambia_esta_contrasena_inicial
+AUTH_SEED_ADMIN_PASSWORD=contrasena_inicial_segura
 ```
 
-## Usuario Inicial
+Si el frontend se abre desde otro equipo o mediante una IP de red, agregue ese origen completo a `CORS_ORIGINS`, incluido el puerto.
 
-Si la tabla `usuarios` está vacía, `npm run migrate:auth` crea:
+3. Importe `backend/scripts/mysql_universidad_schema.sql` mediante MySQL Workbench o el cliente MySQL.
 
-- Usuario: `admin`
-- Contraseña: el valor configurado en `AUTH_SEED_ADMIN_PASSWORD`
-
-Cambiar esta contraseña antes de presentar o desplegar el sistema.
-
-## Verificación
+4. Aplique las migraciones complementarias e inicie el backend:
 
 ```bash
 cd backend
-npm run start
-```
-
-```bash
-cd frontend
-npm run build
-```
-
-## Producción
-
-La guía de despliegue está en `docs/PRODUCCION.md`.
-
-Resumen:
-
-```bash
-cd backend
-npm ci
 npm run migrate:all
-NODE_ENV=production npm run start:prod
+npm run dev
 ```
+
+5. Inicie el frontend en otra terminal:
 
 ```bash
 cd frontend
-npm ci
-npm run build
+npm run dev
 ```
 
-## Observaciones Para Defensa
+El frontend queda disponible en `http://localhost:5173` y la API en `http://localhost:3000` por defecto.
 
-Fortalezas actuales:
+## Comandos
 
-- Separación clara por capas.
-- Persistencia real en MySQL.
-- Autenticación y autorización.
-- Auditoría de acciones críticas.
-- Migraciones ejecutables.
-- Informes con filtros, gráficos y resumen sincronizado por triggers.
-- Generación de documentos PDF/impresión en módulos clave.
+Backend:
 
-Mejoras recomendadas para una versión final:
+- `npm run dev`: inicia la API con recarga automática.
+- `npm start`: inicia la API sin recarga automática.
+- `npm test`: ejecuta las pruebas automatizadas.
+- `npm run migrate:all`: aplica las migraciones en el orden requerido.
 
-- Completar el módulo `anotaciones`.
-- Agregar pruebas automatizadas de servicios y repositorios.
-- Incorporar bitácora visible con filtros por fecha, usuario y entidad.
-- Reemplazar almacenamiento de JWT en `localStorage` por cookie `httpOnly` en producción.
-- Agregar recuperación/cambio de contraseña desde UI.
-- Documentar casos de uso y diagramas ER/UML en el informe de tesis.
+Frontend:
+
+- `npm run dev`: inicia el servidor de desarrollo.
+- `npm run build`: genera la compilación de producción.
+- `npm run preview`: sirve localmente la compilación generada.
+
+## Seguridad
+
+La API restringe sus rutas mediante autenticación JWT y autorización por roles. Las acciones sensibles se registran en la auditoría. Las credenciales reales y secretos deben permanecer únicamente en archivos `.env`, que están excluidos del control de versiones.

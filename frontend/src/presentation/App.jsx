@@ -6,7 +6,6 @@ import {
   obtenerUsuarioGuardado,
 } from "../application/auth/authUseCases.js";
 import { AppHeader } from "./components/AppHeader.jsx";
-import { EmptySectionPage } from "./components/shared/EmptySectionPage.jsx";
 import { navRoutes } from "./routes.js";
 import { CrearAbsorcionPage } from "./pages/absorciones/CrearAbsorcionPage.jsx";
 import { ImprimirAbsorcionPage } from "./pages/absorciones/ImprimirAbsorcionPage.jsx";

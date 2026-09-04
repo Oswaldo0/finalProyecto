@@ -51,7 +51,6 @@ export function ModificarPenalidadPage() {
   const [errores, setErrores] = useState({});
   const [asignaturas, setAsignaturas] = useState([{ nombre: "", horasAcademicas: "", uv: "" }]);
 
-  // Lista de penalidades para seleccionar
   const [lista, setLista] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [cargandoLista, setCargandoLista] = useState(true);
@@ -96,7 +95,6 @@ export function ModificarPenalidadPage() {
       const pen = await obtenerPenalidad(id);
       setPenalidadId(id);
 
-      // Separar nombre completo en partes (el backend guarda nombre completo combinado)
       const partsAlumno = (pen.alumno_nombre ?? "").split(" ");
       const mitadAlumno = Math.ceil(partsAlumno.length / 2);
       const partsSecretario = (pen.secretario_nombre ?? "").split(" ");
@@ -213,7 +211,6 @@ export function ModificarPenalidadPage() {
       };
       await modificarPenalidad(penalidadId, payload);
       setMensajeExito("Penalidad actualizada correctamente.");
-      // Refrescar lista
       const res = await listarPenalidades({ limit: 100 });
       setLista(res.data ?? []);
       setTimeout(() => {
@@ -270,7 +267,6 @@ export function ModificarPenalidadPage() {
           </label>
         </div>
 
-        {/* Lista de penalidades para seleccionar */}
         <div className="mt-4 rounded-2xl border border-slate-200 bg-white overflow-x-auto">
           {cargandoLista ? (
             <p className="px-4 py-6 text-sm text-slate-500">Cargando registros...</p>
@@ -316,7 +312,6 @@ export function ModificarPenalidadPage() {
           )}
         </div>
 
-        {/* Mensaje cuando no se ha seleccionado ninguna */}
         {!penalidadId && !cargandoFormulario && (
           <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
             <p className="text-sm font-semibold text-blue-800">Selecciona una penalidad de la lista para editarla.</p>
@@ -327,7 +322,6 @@ export function ModificarPenalidadPage() {
           <p className="mt-4 text-sm text-slate-500">Cargando datos del formulario...</p>
         )}
 
-        {/* Formulario de edición */}
         {penalidadId && !cargandoFormulario && (
           <form
           ref={formRef}

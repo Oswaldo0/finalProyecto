@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 const CICLO_OPTIONS = ["I", "II", "INTERCICLO"];
 const YEAR_SPAN = 5;
 const CURRENT_YEAR = new Date().getFullYear();
@@ -10,14 +12,24 @@ export function AcademicCycleFields({
   className = "grid grid-cols-1 gap-4 md:grid-cols-2",
 }) {
   const parsed = parseAcademicCycle(value);
-  const yearOptions = buildYearOptions(parsed.year);
+  const [cycle, setCycle] = useState(parsed.cycle);
+  const [year, setYear] = useState(parsed.year);
+  const yearOptions = buildYearOptions(year);
 
-  function handleCycleChange(cycle) {
-    onChange(buildAcademicCycle(cycle, parsed.year));
+  useEffect(() => {
+    const nextValue = parseAcademicCycle(value);
+    setCycle(nextValue.cycle);
+    setYear(nextValue.year);
+  }, [value]);
+
+  function handleCycleChange(nextCycle) {
+    setCycle(nextCycle);
+    onChange(buildAcademicCycle(nextCycle, year));
   }
 
-  function handleYearChange(year) {
-    onChange(buildAcademicCycle(parsed.cycle, year));
+  function handleYearChange(nextYear) {
+    setYear(nextYear);
+    onChange(buildAcademicCycle(cycle, nextYear));
   }
 
   return (
@@ -25,8 +37,8 @@ export function AcademicCycleFields({
       <label className="grid gap-1 text-sm">
         <span className="font-medium text-slate-700">{label} {required ? <span className="text-red-600">*</span> : null}</span>
         <select
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
-          value={parsed.cycle}
+          className="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          value={cycle}
           onChange={(event) => handleCycleChange(event.target.value)}
           required={required}
         >
@@ -39,8 +51,8 @@ export function AcademicCycleFields({
       <label className="grid gap-1 text-sm">
         <span className="font-medium text-slate-700">Año {required ? <span className="text-red-600">*</span> : null}</span>
         <select
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2"
-          value={parsed.year}
+          className="w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          value={year}
           onChange={(event) => handleYearChange(event.target.value)}
           required={required}
         >

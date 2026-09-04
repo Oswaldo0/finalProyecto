@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   listarRetirosCiclo,
+  marcarRetiroCicloImpresa,
   obtenerRetiroCiclo,
 } from "../../../application/retiroCiclo/retiroCicloUseCases.js";
 import logoUrl from "../../../assets/images/LOGO_USO.png";
@@ -14,12 +15,10 @@ function DocumentoRetiroCiclo({ doc }) {
       </div>
 
       <div style={{ padding: "10px 56px 40px" }}>
-        {/* Título */}
         <h1 style={{ textAlign: "center", fontSize: "13px", fontWeight: "bold", textDecoration: "underline", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "20px" }}>
           Resolución
         </h1>
 
-        {/* Campos: label fijo 130px, valor sangrado 60px adicional */}
         <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "22px", fontSize: "12px" }}>
           <tbody>
             {[
@@ -37,12 +36,10 @@ function DocumentoRetiroCiclo({ doc }) {
           </tbody>
         </table>
 
-        {/* Texto resolución: primera línea sangrada */}
         <p style={{ textAlign: "justify", fontSize: "12px", lineHeight: "1.85", marginBottom: "14px", textIndent: "40px" }}>
           {doc.textoResolucion}
         </p>
 
-        {/* Lista numerada de asignaturas */}
         <div style={{ marginBottom: "14px", paddingLeft: "24px" }}>
           {doc.asignaturas.map((a, i) => (
             <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", padding: "3px 0", lineHeight: "1.7" }}>
@@ -55,17 +52,14 @@ function DocumentoRetiroCiclo({ doc }) {
           ))}
         </div>
 
-        {/* Observación final */}
         {doc.observacionFinal && (
           <p style={{ textAlign: "justify", fontSize: "12px", lineHeight: "1.7", marginBottom: "0" }}>
             {doc.observacionFinal}
           </p>
         )}
 
-        {/* Espacio para firma */}
         <div style={{ height: "120px" }} />
 
-        {/* Firma con línea encima */}
         <div style={{ fontSize: "12px", lineHeight: "1.6" }}>
           <div style={{ borderTop: "1px solid #333", width: "240px", marginBottom: "5px" }} />
           <p style={{ fontWeight: "bold" }}>{doc.decanoNombre}</p>
@@ -94,6 +88,12 @@ export function ImprimirRetiroCicloPage() {
     setCargandoDoc(true);
     try {
       const ret = await obtenerRetiroCiclo(id);
+      const retiroImpreso = await marcarRetiroCicloImpresa(id);
+      setRetiros((items) =>
+        items.map((item) =>
+          item.id === id ? { ...item, estado: retiroImpreso.estado ?? "IMPRESO" } : item,
+        ),
+      );
       setDocSeleccionado({
         id: ret.id,
         correlativo: ret.correlativo,
@@ -108,14 +108,14 @@ export function ImprimirRetiroCicloPage() {
         observacionFinal: ret.observacion_final ?? "",
         decanoNombre: ret.decano_nombre ?? "",
         facultadNombre: ret.facultad_nombre ?? "",
-        estado: ret.estado,
+        estado: retiroImpreso.estado ?? "IMPRESO",
         asignaturas: (ret.asignaturas ?? []).map((a) => ({
           nombre: a.asignatura_nombre,
           uv: a.uv,
         })),
       });
     } catch {
-      alert("No se pudo cargar el documento de retiro de ciclo.");
+      alert("No se pudo cargar o actualizar el documento de retiro de ciclo.");
     } finally {
       setCargandoDoc(false);
     }
@@ -155,7 +155,6 @@ export function ImprimirRetiroCicloPage() {
             align-items: center;
           }
           .doc-header img { height: 80px; }
-          /* Contenido principal */
           .doc-body { padding: 10px 56px 40px; }
           .doc-title {
             text-align: center;
@@ -166,12 +165,10 @@ export function ImprimirRetiroCicloPage() {
             text-decoration: underline;
             margin-bottom: 20px;
           }
-          /* Campos: label 130px fijo, valor sangrado 60px */
           .campos { margin-bottom: 22px; }
           .campo { display: flex; margin-bottom: 5px; line-height: 1.5; }
           .campo-label { width: 130px; font-weight: bold; flex-shrink: 0; }
           .campo-valor { padding-left: 60px; flex: 1; }
-          /* Texto con sangría en primera línea */
           .body-text {
             text-align: justify;
             margin-bottom: 14px;
@@ -183,18 +180,15 @@ export function ImprimirRetiroCicloPage() {
             margin-bottom: 14px;
             line-height: 1.7;
           }
-          /* Lista asignaturas */
           .asignaturas { margin: 0 0 16px 24px; }
           .asig-row { display: flex; padding: 3px 0; line-height: 1.7; align-items: baseline; }
           .asig-num { width: 28px; flex-shrink: 0; }
           .asig-nombre { flex: 1; }
           .asig-uv { width: 60px; text-align: left; padding-left: 12px; flex-shrink: 0; }
-          /* Firma */
           .firma-space { height: 120px; }
           .firma { font-size: 12px; line-height: 1.6; }
           .firma-linea { border-top: 1px solid #333; width: 240px; margin-bottom: 5px; }
           .firma-nombre { font-weight: bold; }
-          /* Pie de página */
           .pie-pagina {
             background: #1a3a6e;
             color: #fff;

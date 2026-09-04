@@ -31,7 +31,6 @@ app.disable("x-powered-by");
 app.use(applySecurityHeaders);
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "1mb" }));
 
-// CORS controlado por CORS_ORIGINS.
 app.use((req, res, next) => {
   const origin = req.get("Origin");
   if (origin && !allowedOrigins.has(origin)) {
@@ -80,7 +79,6 @@ if (env.isProduction) {
   });
 }
 
-// Manejador global de errores
 app.use((err, _req, res, _next) => {
   const status = err.status || 500;
   const message = status >= 500 && env.isProduction

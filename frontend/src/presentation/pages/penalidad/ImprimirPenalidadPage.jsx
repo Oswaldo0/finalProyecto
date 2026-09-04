@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { listarPenalidades, obtenerPenalidad } from "../../../application/penalidad/penalidadUseCases.js";
+import {
+  listarPenalidades,
+  marcarPenalidadImpresa,
+  obtenerPenalidad,
+} from "../../../application/penalidad/penalidadUseCases.js";
 import logoUrl from "../../../assets/images/LOGO_USO.png";
 import { openPrintWindow } from "../../utils/printDocument.js";
 import { PreviewModal, PrintButton, PrintTable, PrintWindow, StatusBadge } from "../../components/shared/PrintWindow.jsx";
@@ -137,6 +141,12 @@ export function ImprimirPenalidadPage() {
     setCargandoDoc(true);
     try {
       const pen = await obtenerPenalidad(id);
+      const penalidadImpresa = await marcarPenalidadImpresa(id);
+      setPenalidades((items) =>
+        items.map((item) =>
+          item.id === id ? { ...item, estado: penalidadImpresa.estado ?? "IMPRESO" } : item,
+        ),
+      );
       const secretario = separarNombreCompleto(pen.secretario_nombre ?? "");
       const alumno = separarNombreCompleto(pen.alumno_nombre ?? "");
       const decano = separarNombreCompleto(pen.decano_nombre ?? "");
@@ -148,7 +158,7 @@ export function ImprimirPenalidadPage() {
         alumno: pen.alumno_nombre,
         carrera: pen.carrera_nombre,
         cicloReingreso: pen.ciclo_reingreso,
-        estado: pen.estado,
+        estado: penalidadImpresa.estado ?? "IMPRESO",
         secretarioNombres: secretario.nombres,
         secretarioApellidos: secretario.apellidos,
         decanoNombres: decano.nombres,
@@ -165,7 +175,7 @@ export function ImprimirPenalidadPage() {
         })),
       });
     } catch {
-      alert("No se pudo cargar el documento de penalidad.");
+      alert("No se pudo cargar o actualizar el documento de penalidad.");
     } finally {
       setCargandoDoc(false);
     }

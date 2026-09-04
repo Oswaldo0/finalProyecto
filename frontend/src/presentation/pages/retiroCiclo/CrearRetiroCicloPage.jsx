@@ -146,7 +146,6 @@ export function CrearRetiroCicloPage() {
             </label>
           </div>
 
-          {/* Alumno: nombres y apellidos separados */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Alumno</p>
@@ -267,7 +266,6 @@ export function CrearRetiroCicloPage() {
             />
           </label>
 
-          {/* Decano: nombres y apellidos separados */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Decano</p>

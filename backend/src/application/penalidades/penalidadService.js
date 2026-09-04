@@ -64,7 +64,6 @@ export async function generarPdf(id, res) {
   const enLetras = numLetras[(pen.asignaturas?.length ?? 1) - 1] ?? String(pen.asignaturas?.length ?? 0);
   const fechaFormateada = pen.fecha ? new Date(pen.fecha).toLocaleDateString("es-SV") : "";
 
-  // Encabezado MEMORANDO
   doc.font("Helvetica-Bold").fontSize(10);
   const headerY = doc.y;
   doc.text("MEMORANDO:", 65, headerY);
@@ -73,7 +72,6 @@ export async function generarPdf(id, res) {
   doc.moveTo(65, doc.y).lineTo(doc.page.width - 65, doc.y).stroke();
   doc.moveDown(0.5);
 
-  // Campos PARA / DE / ASUNTO / FECHA
   const labelW = 70;
   const valueX = 65 + labelW;
   const rowOpts = { width: doc.page.width - 65 - valueX };
@@ -94,7 +92,6 @@ export async function generarPdf(id, res) {
   doc.moveTo(65, doc.y).lineTo(doc.page.width - 65, doc.y).stroke();
   doc.moveDown(0.8);
 
-  // Cuerpo
   doc.font("Helvetica").fontSize(10);
   doc.text(
     `Respetuosamente informo que el bachiller ${pen.alumno_nombre} ha solicitado el reingreso a la carrera de ${pen.carrera_nombre}.`,
@@ -108,7 +105,6 @@ export async function generarPdf(id, res) {
   );
   doc.moveDown(0.6);
 
-  // Asignaturas numeradas
   if (pen.asignaturas?.length > 0) {
     pen.asignaturas.forEach((a, i) => {
       const uvStr = a.uv != null ? String(a.uv).padStart(2, "0") : "  ";

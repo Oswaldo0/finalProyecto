@@ -190,7 +190,6 @@ export function ModificarRetiroCicloPage() {
       };
       await modificarRetiro(retiroId, payload);
       setMensajeExito("Retiro de ciclo actualizado correctamente.");
-      // Refrescar lista
       listarRetirosCiclo({ limit: 100 })
         .then((res) => setLista(res.data ?? []))
         .catch(() => {});
@@ -205,7 +204,6 @@ export function ModificarRetiroCicloPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
-      {/* Tabla de selección */}
       <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
         <h2 className="text-base font-semibold text-slate-700">
           Historial retiro
@@ -311,7 +309,6 @@ export function ModificarRetiroCicloPage() {
         ) : null}
       </section>
 
-      {/* Formulario de edición */}
       {retiroId && (
         <section className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
           <h3 className="text-sm font-semibold text-slate-700">
@@ -373,7 +370,6 @@ export function ModificarRetiroCicloPage() {
               </label>
             </div>
 
-            {/* Alumno */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -458,7 +454,6 @@ export function ModificarRetiroCicloPage() {
               />
             </label>
 
-            {/* Asignaturas */}
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-600">
@@ -531,7 +526,6 @@ export function ModificarRetiroCicloPage() {
               />
             </label>
 
-            {/* Decano */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">

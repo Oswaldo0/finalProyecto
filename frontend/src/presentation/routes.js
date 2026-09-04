@@ -1,4 +1,4 @@
-import absorcionesIcon from "../assets/images/usoAbosorción.png";
+import absorcionesIcon from "../assets/images/usoAbsorcion.png";
 import anotacionesIcon from "../assets/images/usoAnotaciones.png";
 import equivalenciasIcon from "../assets/images/usoEquivalencias.png";
 import informesIcon from "../assets/images/usoInformes.png";
