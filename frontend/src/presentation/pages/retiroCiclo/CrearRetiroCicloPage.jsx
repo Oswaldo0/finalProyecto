@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { crearRetiro } from "../../../application/retiroCiclo/retiroCicloUseCases.js";
+import { AcademicCycleFields } from "../../components/shared/AcademicCycleFields.jsx";
+import { AcademicUvFields } from "../../components/shared/AcademicUvFields.jsx";
 import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const FORMULARIO_INICIAL = {
@@ -24,7 +26,7 @@ export function CrearRetiroCicloPage() {
   const navigate = useNavigate();
   const [showCancelNotice, setShowCancelNotice] = useState(false);
   const [formulario, setFormulario] = useState(FORMULARIO_INICIAL);
-  const [materias, setMaterias] = useState([{ nombre: "", uv: "" }]);
+  const [materias, setMaterias] = useState([{ nombre: "", horasAcademicas: "", uv: "" }]);
   const [guardando, setGuardando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState("");
   const [mensajeError, setMensajeError] = useState("");
@@ -41,8 +43,14 @@ export function CrearRetiroCicloPage() {
     );
   }
 
+  function handleMateriaUvChange(index, horasAcademicas, uv) {
+    setMaterias((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, horasAcademicas, uv } : item)),
+    );
+  }
+
   function agregarMateria() {
-    setMaterias((prev) => [...prev, { nombre: "", uv: "" }]);
+    setMaterias((prev) => [...prev, { nombre: "", horasAcademicas: "", uv: "" }]);
   }
 
   function eliminarMateria(index) {
@@ -76,12 +84,16 @@ export function CrearRetiroCicloPage() {
         },
         asignaturas: materias
           .filter((m) => m.nombre.trim() !== "")
-          .map((m) => ({ asignatura_nombre: m.nombre.trim(), uv: m.uv !== "" ? Number(m.uv) : null })),
+          .map((m) => ({
+            asignatura_nombre: m.nombre.trim(),
+            horas_academicas: m.horasAcademicas !== "" ? Number(m.horasAcademicas) : null,
+            uv: m.uv !== "" ? Number(m.uv) : null,
+          })),
       };
       await crearRetiro(payload);
       setMensajeExito("Retiro de ciclo guardado correctamente.");
       setFormulario(FORMULARIO_INICIAL);
-      setMaterias([{ nombre: "", uv: "" }]);
+      setMaterias([{ nombre: "", horasAcademicas: "", uv: "" }]);
     } catch (err) {
       setMensajeError("Error al guardar: " + (err.message ?? "Error desconocido."));
     } finally {
@@ -177,17 +189,12 @@ export function CrearRetiroCicloPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">Ciclo a retirar</span>
-              <input
-                type="text"
-                className="rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="Ej. I-2026"
-                value={formulario.cicloRetirar}
-                onChange={(e) => handleInputChange("cicloRetirar", e.target.value)}
-                required
-              />
-            </label>
+            <AcademicCycleFields
+              label="Ciclo a retirar"
+              value={formulario.cicloRetirar}
+              onChange={(value) => handleInputChange("cicloRetirar", value)}
+              required
+            />
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Artículo de referencia</span>
               <input
@@ -222,7 +229,7 @@ export function CrearRetiroCicloPage() {
             </div>
             <div className="mt-3 grid gap-2">
               {materias.map((materia, index) => (
-                <div key={index} className="grid grid-cols-[1fr_100px_auto] gap-2 items-center">
+                <div key={index} className="grid grid-cols-[1fr_190px_auto] gap-2 items-center">
                   <input
                     type="text"
                     className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -230,18 +237,11 @@ export function CrearRetiroCicloPage() {
                     value={materia.nombre}
                     onChange={(e) => handleMateriaChange(index, "nombre", e.target.value)}
                   />
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    placeholder="UV"
-                    value={materia.uv}
-                    onChange={(e) => handleMateriaChange(index, "uv", e.target.value)}
-                    onKeyDown={(e) => {
-                      if (["e", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
+                  <AcademicUvFields
+                    compact
+                    hours={materia.horasAcademicas}
+                    uv={materia.uv}
+                    onChange={(hours, uv) => handleMateriaUvChange(index, hours, uv)}
                   />
                   <button
                     type="button"

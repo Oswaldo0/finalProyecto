@@ -5,6 +5,7 @@ import {
   crearAnotacion,
   obtenerCatalogosAnotaciones,
 } from "../../../application/anotaciones/anotacionesUseCases.js";
+import { AcademicCycleFields } from "../../components/shared/AcademicCycleFields.jsx";
 import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const FORMULARIO_INICIAL = {
@@ -160,11 +161,10 @@ export function CrearAnotacionPage() {
                 value={formulario.aula}
                 onChange={(value) => handleInputChange("aula", value)}
               />
-              <Input
-                label="Ciclo"
-                placeholder="Ej. I-2026"
+              <AcademicCycleFields
                 value={formulario.ciclo}
                 onChange={(value) => handleInputChange("ciclo", value)}
+                required
               />
             </div>
 

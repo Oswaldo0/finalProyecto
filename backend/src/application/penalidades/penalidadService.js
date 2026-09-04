@@ -1,9 +1,11 @@
 import * as repo from "../../infrastructure/repositories/penalidadRepository.js";
 import PDFDocument from "pdfkit";
 import {
+  assertAcademicCycle,
   assertNonNegativeDecimal,
   assertPositiveInteger,
   assertValidDate,
+  normalizeAcademicUv,
   requireFields,
   requireNonEmptyArray,
   requireObject,
@@ -25,17 +27,24 @@ export async function obtener(id) {
 
 export async function crear(body) {
   const { penalidad, asignaturas } = body;
+  const asignaturasNormalizadas = normalizarAsignaturas(asignaturas);
   validarCampos(penalidad);
-  validarAsignaturas(asignaturas);
-  return repo.create({ penalidad, asignaturas });
+  validarAsignaturas(asignaturasNormalizadas);
+  return repo.create({ penalidad, asignaturas: asignaturasNormalizadas });
 }
 
 export async function actualizar(id, body) {
   await obtener(id);
   const { penalidad, asignaturas } = body;
+  const asignaturasNormalizadas = normalizarAsignaturas(asignaturas);
   validarCampos(penalidad);
-  validarAsignaturas(asignaturas);
-  return repo.update(id, { penalidad, asignaturas });
+  validarAsignaturas(asignaturasNormalizadas);
+  return repo.update(id, { penalidad, asignaturas: asignaturasNormalizadas });
+}
+
+export async function marcarImpresa(id) {
+  await obtener(id);
+  return repo.markAsPrinted(id);
 }
 
 export async function eliminar(id) {
@@ -137,6 +146,7 @@ function validarCampos(p = {}) {
   requireFields(p, requeridos);
   assertValidDate(p.fecha, "fecha", { required: true });
   assertPositiveInteger(Number(p.cantidad_anios_egreso), "cantidad_anios_egreso");
+  assertAcademicCycle(p.ciclo_reingreso, "ciclo_reingreso");
   assertPositiveInteger(Number(p.anio_egreso), "anio_egreso");
   assertPositiveInteger(Number(p.anios_egresado), "anios_egresado");
 }
@@ -148,4 +158,11 @@ function validarAsignaturas(asignaturas = []) {
     requireFields(asignatura, ["asignatura_nombre"]);
     assertNonNegativeDecimal(asignatura.uv, `asignaturas[${index}].uv`);
   });
+}
+
+function normalizarAsignaturas(asignaturas = []) {
+  return asignaturas.map((asignatura) => ({
+    ...asignatura,
+    uv: normalizeAcademicUv(asignatura),
+  }));
 }

@@ -1,4 +1,5 @@
 import pool from "../database/mysqlPool.js";
+import { dateOnly } from "./dateOnly.js";
 
 function buildCorrelativo(id) {
   return `OBS-${String(id).padStart(4, "0")}`;
@@ -30,7 +31,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
     params,
   );
 
-  return { data: rows, total, page, limit };
+  return { data: rows.map(mapAnotacion), total, page, limit };
 }
 
 export async function findById(id) {
@@ -44,7 +45,7 @@ export async function findById(id) {
     [id],
   );
 
-  return row ?? null;
+  return mapAnotacion(row);
 }
 
 export async function create(anotacion) {
@@ -56,7 +57,7 @@ export async function create(anotacion) {
     [
       anotacion.usuario_id ?? null,
       anotacion.observador,
-      anotacion.fecha,
+      dateOnly(anotacion.fecha),
       anotacion.hora_inicio,
       anotacion.hora_fin,
       anotacion.asignatura_grupo,
@@ -66,7 +67,7 @@ export async function create(anotacion) {
       anotacion.aula,
       anotacion.ciclo,
       anotacion.observaciones,
-      anotacion.estado ?? "BORRADOR",
+      anotacion.estado ?? "CREADO",
     ],
   );
 
@@ -87,7 +88,7 @@ export async function update(id, anotacion) {
      WHERE id = ?`,
     [
       anotacion.observador,
-      anotacion.fecha,
+      dateOnly(anotacion.fecha),
       anotacion.hora_inicio,
       anotacion.hora_fin,
       anotacion.asignatura_grupo,
@@ -97,7 +98,7 @@ export async function update(id, anotacion) {
       anotacion.aula,
       anotacion.ciclo,
       anotacion.observaciones,
-      anotacion.estado ?? "BORRADOR",
+      anotacion.estado ?? "CREADO",
       id,
     ],
   );
@@ -108,6 +109,17 @@ export async function update(id, anotacion) {
 export async function remove(id) {
   const [result] = await pool.query(`DELETE FROM anotaciones WHERE id = ?`, [id]);
   return result.affectedRows > 0;
+}
+
+export async function markAsPrinted(id) {
+  await pool.query(
+    `UPDATE anotaciones
+     SET estado = 'IMPRESO'
+     WHERE id = ? AND estado = 'CREADO'`,
+    [id],
+  );
+
+  return findById(id);
 }
 
 export async function findCatalogos() {
@@ -125,6 +137,11 @@ export async function findCatalogos() {
     }),
     { observadores: [], facultades: [], horarios: [] },
   );
+}
+
+function mapAnotacion(row) {
+  if (!row) return null;
+  return { ...row, fecha: dateOnly(row.fecha) };
 }
 
 export async function replaceCatalogos(catalogos) {

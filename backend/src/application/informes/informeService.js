@@ -6,9 +6,11 @@ const TIPO_LABELS = {
   RETIRO_CICLO: "Retiros de ciclo",
   EQUIVALENCIA: "Equivalencias",
   ABSORCION: "Absorciones",
+  CONSULTA: "Consultas",
+  ANOTACION: "Anotaciones",
 };
 
-const CHART_COLORS = ["#0f172a", "#2563eb", "#16a34a", "#ca8a04", "#dc2626", "#7c3aed"];
+const CHART_COLORS = ["#0f172a", "#2563eb", "#16a34a", "#ca8a04", "#dc2626", "#7c3aed", "#0891b2", "#be123c"];
 const PAGE = {
   margin: 36,
   headerHeight: 42,
@@ -37,26 +39,38 @@ export async function generarPdf(filtros, res) {
   res.setHeader("Content-Disposition", 'inline; filename="reporte-informes.pdf"');
   doc.pipe(res);
 
-  renderPageHeader(doc, "Reporte detallado de documentos académicos");
+  renderPageHeader(doc, "Reporte de informes");
   renderFiltersBox(doc, filtros);
   renderKpiCards(doc, resumen);
 
-  renderSectionTitle(doc, "Análisis gráfico");
-  renderBarChart(doc, "Documentos por tipo", resumen.porTipo.map((item) => ({
+  renderSectionTitle(doc, "Dashboard de reportes");
+  renderBarChart(doc, "Reportes por tipo", resumen.porTipo.map((item) => ({
     label: TIPO_LABELS[item.tipo_documento] ?? item.tipo_documento,
     value: Number(item.total),
   })));
-  renderBarChart(doc, "Documentos por periodo", resumen.porPeriodo.map((item) => ({
+  renderBarChart(doc, "Reportes por mes", resumen.porPeriodo.map((item) => ({
     label: item.periodo,
     value: Number(item.total),
   })));
-  renderDeviationChart(doc, "Desviación mensual contra el promedio", resumen.porPeriodo.map((item) => ({
-    label: item.periodo,
+  renderBarChart(doc, "Reportes por ciclo", resumen.porCiclo.map((item) => ({
+    label: item.ciclo,
+    value: Number(item.total),
+  })));
+  renderBarChart(doc, "Materias con más registros", resumen.porMateria.map((item) => ({
+    label: item.materia,
+    value: Number(item.total),
+  })));
+  renderBarChart(doc, "Reportes por coordinador", resumen.porCoordinador.map((item) => ({
+    label: item.coordinador,
+    value: Number(item.total),
+  })));
+  renderBarChart(doc, "Reportes por estado", resumen.porEstado.map((item) => ({
+    label: item.estado || "Sin estado",
     value: Number(item.total),
   })));
 
-  doc.addPage();
-  renderPageHeader(doc, "Detalle de documentos");
+  ensureSpace(doc, 110);
+  renderSectionTitle(doc, "Histórico de reportes");
   renderDocumentsTable(doc, resumen.documentos);
   renderPageNumbers(doc);
 
@@ -91,12 +105,13 @@ function renderFiltersBox(doc, filtros) {
   const x = PAGE.margin;
   const y = doc.y;
   const width = contentWidth(doc);
-  const height = 54;
+  const height = 74;
   const cols = [
-    ["Desde", filtros.fechaDesde || "Sin filtro"],
-    ["Hasta", filtros.fechaHasta || "Sin filtro"],
-    ["Documento", filtros.tipoDocumento ? TIPO_LABELS[filtros.tipoDocumento] ?? filtros.tipoDocumento : "Todos"],
-    ["Estado", filtros.estado || "Todos"],
+    ["Año", filtros.anio || "Todos"],
+    ["Ciclo", filtros.ciclo || "Todos"],
+    ["Materia", filtros.materia || "Todas"],
+    ["Tipo", filtros.tipoDocumento ? TIPO_LABELS[filtros.tipoDocumento] ?? filtros.tipoDocumento : "Todos"],
+    ["Coordinador", filtros.coordinador || "Todos"],
   ];
   const colWidth = width / cols.length;
 
@@ -114,15 +129,25 @@ function renderFiltersBox(doc, filtros) {
     });
   });
 
+  doc.font("Helvetica").fontSize(7.5).fillColor("#64748b").text(
+    `Rango de fechas: ${filtros.fechaDesde || "Sin inicio"} - ${filtros.fechaHasta || "Sin fin"}${filtros.estado ? ` | Estado: ${filtros.estado}` : ""}`,
+    x + 12,
+    y + 58,
+    { width: width - 24, ellipsis: true },
+  );
+
   doc.y = y + height + 14;
 }
 
 function renderKpiCards(doc, resumen) {
+  const topTipo = resumen.porTipo[0];
+  const topCiclo = resumen.porCiclo[0];
+  const topCoordinador = resumen.porCoordinador[0];
   const cards = [
-    ["Total documentos", resumen.totalDocumentos],
-    ["Tipos con registros", resumen.porTipo.length],
-    ["Estados con registros", resumen.porEstado.length],
-    ["Periodos con registros", resumen.porPeriodo.length],
+    ["Reportes creados", resumen.totalDocumentos],
+    ["Tipo principal", topTipo ? TIPO_LABELS[topTipo.tipo_documento] ?? topTipo.tipo_documento : "-"],
+    ["Ciclo con mayor movimiento", topCiclo?.ciclo ?? "-"],
+    ["Coordinador destacado", topCoordinador?.coordinador ?? "-"],
   ];
   const gap = 10;
   const width = (contentWidth(doc) - gap * (cards.length - 1)) / cards.length;
@@ -133,8 +158,9 @@ function renderKpiCards(doc, resumen) {
     const x = PAGE.margin + index * (width + gap);
     doc.roundedRect(x, y, width, height, 6).fillAndStroke("#ffffff", "#cbd5e1");
     doc.font("Helvetica").fontSize(7.5).fillColor("#64748b").text(label, x + 10, y + 9, { width: width - 20 });
-    doc.font("Helvetica-Bold").fontSize(16).fillColor("#0f172a").text(String(value), x + 10, y + 24, {
+    doc.font("Helvetica-Bold").fontSize(String(value).length > 18 ? 9 : 13).fillColor("#0f172a").text(String(value), x + 10, y + 24, {
       width: width - 20,
+      ellipsis: true,
     });
   });
 
@@ -194,58 +220,6 @@ function renderBarChart(doc, title, items) {
   doc.y = y + height + 12;
 }
 
-function renderDeviationChart(doc, title, items) {
-  const rowHeight = 16;
-  const height = Math.max(88, 46 + Math.min(items.length, 16) * rowHeight);
-  ensureSpace(doc, height + 12);
-
-  const x = PAGE.margin;
-  const y = doc.y;
-  const width = contentWidth(doc);
-  const labelWidth = 76;
-  const valueWidth = 52;
-  const plotWidth = width - labelWidth - valueWidth - 42;
-  const plotX = x + 14 + labelWidth;
-  const centerX = plotX + plotWidth / 2;
-  const average = items.length > 0 ? items.reduce((sum, item) => sum + item.value, 0) / items.length : 0;
-  const deviations = items.map((item) => ({ ...item, deviation: item.value - average }));
-  const maxDeviation = Math.max(...deviations.map((item) => Math.abs(item.deviation)), 1);
-
-  renderChartFrame(doc, x, y, width, height, title);
-  doc.font("Helvetica").fontSize(7.5).fillColor("#64748b").text(`Promedio mensual: ${average.toFixed(2)}`, x + 14, y + 20);
-
-  if (items.length === 0) {
-    doc.font("Helvetica").fontSize(8).fillColor("#64748b").text("Sin datos para graficar.", x + 14, y + 38);
-    doc.y = y + height + 12;
-    return;
-  }
-
-  const axisTop = y + 42;
-  const axisBottom = y + height - 12;
-  doc.moveTo(centerX, axisTop - 5).lineTo(centerX, axisBottom).strokeColor("#94a3b8").stroke();
-  doc.strokeColor("#000000");
-
-  let rowY = axisTop;
-  deviations.slice(0, 16).forEach((item) => {
-    const length = Math.abs(item.deviation) / maxDeviation * (plotWidth / 2 - 4);
-    const isPositive = item.deviation >= 0;
-    const barX = isPositive ? centerX : centerX - length;
-    const color = isPositive ? "#16a34a" : "#dc2626";
-
-    doc.font("Helvetica").fontSize(7.4).fillColor("#334155").text(item.label, x + 14, rowY, { width: labelWidth });
-    doc.roundedRect(plotX, rowY, plotWidth, 8, 3).fill("#f1f5f9");
-    doc.roundedRect(barX, rowY, Math.max(length, 2), 8, 3).fill(color);
-    doc.font("Helvetica-Bold").fontSize(7.4).fillColor("#0f172a").text(item.deviation.toFixed(1), plotX + plotWidth + 8, rowY - 1, {
-      width: valueWidth,
-      align: "right",
-    });
-    rowY += rowHeight;
-  });
-
-  doc.fillColor("#111827");
-  doc.y = y + height + 12;
-}
-
 function renderChartFrame(doc, x, y, width, height, title) {
   doc.roundedRect(x, y, width, height, 7).fillAndStroke("#ffffff", "#cbd5e1");
   doc.font("Helvetica-Bold").fontSize(9).fillColor("#0f172a").text(title, x + 14, y + 10, {
@@ -255,8 +229,8 @@ function renderChartFrame(doc, x, y, width, height, title) {
 
 function renderDocumentsTable(doc, documentos) {
   const startX = PAGE.margin;
-  const widths = [58, 100, 86, 170, 230, 70];
-  const headers = ["Fecha", "Tipo", "Correlativo", "Alumno", "Carrera", "Estado"];
+  const widths = [52, 78, 74, 104, 104, 50, 104, 98, 56];
+  const headers = ["Fecha", "Tipo", "Correlativo", "Alumno / ref.", "Carrera / facultad", "Ciclo", "Materia", "Coordinador", "Estado"];
   let y = doc.y;
 
   function renderHeader() {
@@ -274,7 +248,7 @@ function renderDocumentsTable(doc, documentos) {
   renderHeader();
 
   if (documentos.length === 0) {
-    doc.font("Helvetica").fontSize(8).fillColor("#64748b").text("No hay documentos para los filtros seleccionados.", startX, y);
+    doc.font("Helvetica").fontSize(8).fillColor("#64748b").text("No hay reportes para los filtros seleccionados.", startX, y);
     return;
   }
 
@@ -285,6 +259,9 @@ function renderDocumentsTable(doc, documentos) {
       documento.correlativo || "-",
       documento.alumno_nombre || "-",
       documento.carrera_nombre || "-",
+      documento.ciclo || "-",
+      documento.materia || "-",
+      documento.coordinador || "-",
       documento.estado || "-",
     ];
     const rowHeight = Math.max(
@@ -294,7 +271,7 @@ function renderDocumentsTable(doc, documentos) {
 
     if (y + rowHeight > doc.page.height - PAGE.margin - 22) {
       doc.addPage();
-      renderPageHeader(doc, "Detalle de documentos");
+      renderPageHeader(doc, "Histórico de reportes");
       renderHeader();
     }
 
@@ -302,7 +279,7 @@ function renderDocumentsTable(doc, documentos) {
       doc.rect(startX, y - 2, contentWidth(doc), rowHeight).fill("#f8fafc");
     }
 
-    doc.font("Helvetica").fontSize(7.1).fillColor("#111827");
+    doc.font("Helvetica").fontSize(6.6).fillColor("#111827");
     row.forEach((cell, cellIndex) => {
       doc.text(String(cell), startX + 8 + sumWidths(widths, cellIndex), y + 2, {
         width: widths[cellIndex] - 8,
@@ -329,7 +306,7 @@ function renderPageNumbers(doc) {
 function ensureSpace(doc, height = 60) {
   if (doc.y + height > doc.page.height - PAGE.margin - 18) {
     doc.addPage();
-    renderPageHeader(doc, "Reporte detallado de documentos académicos");
+    renderPageHeader(doc, "Reporte de informes");
   }
 }
 

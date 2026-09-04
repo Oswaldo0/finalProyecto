@@ -8,7 +8,7 @@ const accionesEquivalencias = [
     buttonClassName: "bg-[#1E90FF] text-white hover:bg-[#1874cd]",
   },
   {
-    label: "Modificar equivalencia",
+    label: "Historial equivalencia",
     route: "/equivalencias/modificar",
     icon: "cached",
     buttonClassName: "bg-[#1E90FF] text-white hover:bg-[#1874cd]",

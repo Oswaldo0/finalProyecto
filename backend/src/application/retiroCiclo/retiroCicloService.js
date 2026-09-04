@@ -1,7 +1,9 @@
 import * as repo from "../../infrastructure/repositories/retiroCicloRepository.js";
 import {
+  assertAcademicCycle,
   assertNonNegativeDecimal,
   assertValidDate,
+  normalizeAcademicUv,
   requireFields,
   requireNonEmptyArray,
   requireObject,
@@ -23,17 +25,24 @@ export async function obtener(id) {
 
 export async function crear(body) {
   const { retiro, asignaturas } = body;
+  const asignaturasNormalizadas = normalizarAsignaturas(asignaturas);
   validarCampos(retiro);
-  validarAsignaturas(asignaturas);
-  return repo.create({ retiro, asignaturas });
+  validarAsignaturas(asignaturasNormalizadas);
+  return repo.create({ retiro, asignaturas: asignaturasNormalizadas });
 }
 
 export async function actualizar(id, body) {
   await obtener(id);
   const { retiro, asignaturas } = body;
+  const asignaturasNormalizadas = normalizarAsignaturas(asignaturas);
   validarCampos(retiro);
-  validarAsignaturas(asignaturas);
-  return repo.update(id, { retiro, asignaturas });
+  validarAsignaturas(asignaturasNormalizadas);
+  return repo.update(id, { retiro, asignaturas: asignaturasNormalizadas });
+}
+
+export async function marcarImpresa(id) {
+  await obtener(id);
+  return repo.markAsPrinted(id);
 }
 
 export async function eliminar(id) {
@@ -51,6 +60,7 @@ function validarCampos(retiro) {
   ];
   requireFields(retiro, required);
   assertValidDate(retiro.fecha, "fecha", { required: true });
+  assertAcademicCycle(retiro.ciclo_a_retirar, "ciclo_a_retirar");
 }
 
 function validarAsignaturas(asignaturas = []) {
@@ -60,4 +70,11 @@ function validarAsignaturas(asignaturas = []) {
     requireFields(asignatura, ["asignatura_nombre"]);
     assertNonNegativeDecimal(asignatura.uv, `asignaturas[${index}].uv`);
   });
+}
+
+function normalizarAsignaturas(asignaturas = []) {
+  return asignaturas.map((asignatura) => ({
+    ...asignatura,
+    uv: normalizeAcademicUv(asignatura),
+  }));
 }

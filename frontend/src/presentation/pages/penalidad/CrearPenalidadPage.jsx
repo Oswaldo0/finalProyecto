@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { crearPenalidad } from "../../../application/penalidad/penalidadUseCases.js";
+import { AcademicCycleFields } from "../../components/shared/AcademicCycleFields.jsx";
+import { AcademicUvFields } from "../../components/shared/AcademicUvFields.jsx";
 import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const ANIO_ACTUAL = new Date().getFullYear();
@@ -45,7 +47,7 @@ export function CrearPenalidadPage() {
   const [showCancelNotice, setShowCancelNotice] = useState(false);
   const [form, setForm] = useState(INICIAL);
   const [errores, setErrores] = useState({});
-  const [asignaturas, setAsignaturas] = useState([{ nombre: "", uv: "" }]);
+  const [asignaturas, setAsignaturas] = useState([{ nombre: "", horasAcademicas: "", uv: "" }]);
   const [errorAsignaturas, setErrorAsignaturas] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState("");
@@ -61,7 +63,7 @@ export function CrearPenalidadPage() {
   }
 
   function agregarAsignatura() {
-    setAsignaturas((prev) => [...prev, { nombre: "", uv: "" }]);
+    setAsignaturas((prev) => [...prev, { nombre: "", horasAcademicas: "", uv: "" }]);
     setErrorAsignaturas("");
   }
 
@@ -74,6 +76,13 @@ export function CrearPenalidadPage() {
     const finalValue = normalizeByField(field, value);
     setAsignaturas((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: finalValue } : item))
+    );
+    setErrorAsignaturas("");
+  }
+
+  function handleAsignaturaUvChange(index, horasAcademicas, uv) {
+    setAsignaturas((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, horasAcademicas, uv } : item)),
     );
     setErrorAsignaturas("");
   }
@@ -124,17 +133,18 @@ export function CrearPenalidadPage() {
           mes_egreso: form.mesEgreso,
           anio_egreso: Number(form.anioEgreso),
           anios_egresado: Number(form.aniosEgresado),
-          estado: "BORRADOR",
+          estado: "CREADO",
         },
         asignaturas: asignaturasValidas.map((a) => ({
           asignatura_nombre: a.nombre.trim(),
+          horas_academicas: a.horasAcademicas !== "" ? Number(a.horasAcademicas) : null,
           uv: a.uv !== "" ? Number(a.uv) : null,
         })),
       };
       await crearPenalidad(payload);
       setMensajeExito("Penalidad creada correctamente.");
       setForm(INICIAL);
-      setAsignaturas([{ nombre: "", uv: "" }]);
+      setAsignaturas([{ nombre: "", horasAcademicas: "", uv: "" }]);
       setErrores({});
       setTimeout(() => navigate("/penalidad/imprimir"), 1500);
     } catch (err) {
@@ -248,17 +258,13 @@ export function CrearPenalidadPage() {
                 <span className="text-xs text-red-600">{errores.cantidadAniosEgreso}</span>
               )}
             </label>
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">Ciclo de reingreso</span>
-              <input
-                type="text"
-                className="rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="Ej. I-2026"
-                value={form.cicloReingreso}
-                onChange={(e) => handleChange("cicloReingreso", e.target.value)}
-                required
-              />
-            </label>
+            <AcademicCycleFields
+              label="Ciclo de reingreso"
+              value={form.cicloReingreso}
+              onChange={(value) => handleChange("cicloReingreso", value)}
+              required
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:col-span-1"
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -358,7 +364,7 @@ export function CrearPenalidadPage() {
             </div>
             <div className="mt-3 grid gap-2">
               {asignaturas.map((asignatura, index) => (
-                <div key={index} className="grid grid-cols-[1fr_100px_auto] gap-2 items-center">
+                <div key={index} className="grid grid-cols-[1fr_190px_auto] gap-2 items-center">
                   <input
                     type="text"
                     className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -366,18 +372,11 @@ export function CrearPenalidadPage() {
                     value={asignatura.nombre}
                     onChange={(e) => handleAsignaturaChange(index, "nombre", e.target.value)}
                   />
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    placeholder="UV"
-                    value={asignatura.uv}
-                    onChange={(e) => handleAsignaturaChange(index, "uv", e.target.value)}
-                    onKeyDown={(e) => {
-                      if (["e", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
+                  <AcademicUvFields
+                    compact
+                    hours={asignatura.horasAcademicas}
+                    uv={asignatura.uv}
+                    onChange={(hours, uv) => handleAsignaturaUvChange(index, hours, uv)}
                   />
                   <button
                     type="button"

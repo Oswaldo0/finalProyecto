@@ -3,6 +3,7 @@ import {
   crearAnotacion as apiCrear,
   guardarCatalogosAnotaciones as apiGuardarCatalogos,
   listarAnotaciones as apiListar,
+  marcarAnotacionImpresa as apiMarcarImpresa,
   obtenerAnotacion as apiObtener,
   obtenerCatalogosAnotaciones as apiObtenerCatalogos,
 } from "../../infrastructure/api/anotacionApi.js";
@@ -74,6 +75,10 @@ export function imprimirAnotacion(payload) {
   return Promise.resolve(payload);
 }
 
+export function marcarAnotacionImpresa(id) {
+  return apiMarcarImpresa(id).then(fromApi);
+}
+
 function mergeCatalogos(catalogos = {}) {
   return {
     observadores: catalogos.observadores?.length ? catalogos.observadores : CATALOGOS_INICIALES.observadores,
@@ -95,7 +100,7 @@ function toApi(payload) {
     aula: payload.aula,
     ciclo: payload.ciclo,
     observaciones: payload.observaciones,
-    estado: payload.estado ?? "BORRADOR",
+    estado: payload.estado ?? "CREADO",
   };
 }
 

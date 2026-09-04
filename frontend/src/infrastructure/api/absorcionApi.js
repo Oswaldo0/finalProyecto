@@ -28,6 +28,10 @@ export function actualizarAbsorcion(id, payload) {
   });
 }
 
+export function marcarAbsorcionImpresa(id) {
+  return requestJson(`${BASE}/${id}/imprimir`, { method: "PATCH" });
+}
+
 export function eliminarAbsorcion(id) {
   return requestJson(`${BASE}/${id}`, { method: "DELETE" });
 }

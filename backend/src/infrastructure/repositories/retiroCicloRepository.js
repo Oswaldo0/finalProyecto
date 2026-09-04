@@ -1,4 +1,5 @@
 import pool from "../database/mysqlPool.js";
+import { dateOnly } from "./dateOnly.js";
 
 function buildRetiroCicloCorrelativo(fecha, id) {
   if (!fecha || !id) return null;
@@ -35,7 +36,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
     params
   );
 
-  return { data: rows, total, page, limit };
+  return { data: rows.map(mapRetiro), total, page, limit };
 }
 
 export async function findById(id) {
@@ -68,7 +69,7 @@ export async function findById(id) {
     [id]
   );
 
-  return { ...retiro, asignaturas };
+  return { ...mapRetiro(retiro), asignaturas };
 }
 
 export async function create({ retiro, asignaturas = [] }) {
@@ -91,7 +92,7 @@ export async function create({ retiro, asignaturas = [] }) {
         retiro.usuario_id ?? null,
         retiro.expediente,
         retiro.carnet,
-        retiro.fecha,
+        dateOnly(retiro.fecha),
         retiro.alumno_nombre,
         retiro.carrera_nombre,
         retiro.ciclo_a_retirar,
@@ -100,12 +101,12 @@ export async function create({ retiro, asignaturas = [] }) {
         retiro.observacion_final ?? null,
         retiro.decano_nombre,
         retiro.facultad_nombre,
-        retiro.estado ?? "BORRADOR",
+        retiro.estado ?? "CREADO",
       ]
     );
 
     const retiroId = result.insertId;
-    const correlativo = buildRetiroCicloCorrelativo(retiro.fecha, retiroId);
+    const correlativo = buildRetiroCicloCorrelativo(dateOnly(retiro.fecha), retiroId);
 
     if (correlativo) {
       await conn.query(
@@ -154,7 +155,7 @@ export async function update(id, { retiro, asignaturas }) {
       [
         retiro.expediente,
         retiro.carnet,
-        retiro.fecha,
+        dateOnly(retiro.fecha),
         retiro.alumno_nombre,
         retiro.carrera_nombre,
         retiro.ciclo_a_retirar,
@@ -163,14 +164,14 @@ export async function update(id, { retiro, asignaturas }) {
         retiro.observacion_final ?? null,
         retiro.decano_nombre,
         retiro.facultad_nombre,
-        retiro.estado ?? "BORRADOR",
+        retiro.estado ?? "CREADO",
         retiro.estudiante_id ?? null,
         retiro.carrera_id ?? null,
         id,
       ]
     );
 
-    const correlativo = buildRetiroCicloCorrelativo(retiro.fecha, id);
+    const correlativo = buildRetiroCicloCorrelativo(dateOnly(retiro.fecha), id);
     if (correlativo) {
       await conn.query(`UPDATE retiros_ciclo SET correlativo = ? WHERE id = ?`, [correlativo, id]);
     }
@@ -211,4 +212,20 @@ export async function remove(id) {
     [id]
   );
   return result.affectedRows > 0;
+}
+
+export async function markAsPrinted(id) {
+  await pool.query(
+    `UPDATE retiros_ciclo
+     SET estado = 'IMPRESO'
+     WHERE id = ? AND estado = 'CREADO'`,
+    [id],
+  );
+
+  return findById(id);
+}
+
+function mapRetiro(row) {
+  if (!row) return null;
+  return { ...row, fecha: dateOnly(row.fecha) };
 }

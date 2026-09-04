@@ -36,6 +36,15 @@ router.post("/", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), asyn
   }
 });
 
+router.patch("/:id/imprimir", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), async (req, res, next) => {
+  try {
+    const retiro = await service.marcarImpresa(Number(req.params.id));
+    res.json(retiro);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.put("/:id", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), async (req, res, next) => {
   try {
     const retiro = await service.actualizar(Number(req.params.id), req.body);

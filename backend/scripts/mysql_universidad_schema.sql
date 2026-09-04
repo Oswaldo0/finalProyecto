@@ -173,7 +173,7 @@ CREATE TABLE anotaciones
   aula VARCHAR(80) NOT NULL,
   ciclo VARCHAR(60) NOT NULL,
   observaciones TEXT NOT NULL,
-  estado ENUM('BORRADOR', 'EMITIDA', 'ANULADA') NOT NULL DEFAULT 'BORRADOR',
+  estado ENUM('CREADO', 'EMITIDA', 'IMPRESO', 'ANULADA') NOT NULL DEFAULT 'CREADO',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_anotaciones_correlativo (correlativo),
@@ -182,6 +182,41 @@ CREATE TABLE anotaciones
   KEY idx_anotaciones_fecha (fecha),
   KEY idx_anotaciones_observador (observador),
   KEY idx_anotaciones_facultad (facultad)
+) ENGINE=InnoDB;
+
+CREATE TABLE consultas_estudiantes
+(
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  correlativo VARCHAR(50) NULL,
+  usuario_id BIGINT UNSIGNED NULL,
+  estudiante_id BIGINT UNSIGNED NULL,
+  carrera_id BIGINT UNSIGNED NULL,
+  tipo_consulta VARCHAR(80) NOT NULL,
+  coordinador_nombres VARCHAR(120) NOT NULL,
+  coordinador_apellidos VARCHAR(120) NOT NULL,
+  alumno_nombres VARCHAR(120) NOT NULL,
+  alumno_apellidos VARCHAR(120) NOT NULL,
+  fecha_consulta DATE NOT NULL,
+  ciclo VARCHAR(60) NOT NULL,
+  carrera_nombre VARCHAR(180) NOT NULL,
+  materia_nombre VARCHAR(180) NOT NULL DEFAULT 'SIN ASIGNAR',
+  consulta TEXT NOT NULL,
+  respuesta TEXT NOT NULL,
+  estado ENUM('CREADO', 'IMPRESO', 'ANULADA') NOT NULL DEFAULT 'CREADO',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_consultas_estudiantes_correlativo (correlativo),
+  CONSTRAINT fk_consultas_usuario
+    FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
+  CONSTRAINT fk_consultas_estudiante
+    FOREIGN KEY (estudiante_id) REFERENCES estudiantes (id),
+  CONSTRAINT fk_consultas_carrera
+    FOREIGN KEY (carrera_id) REFERENCES carreras (id),
+  KEY idx_consultas_fecha (fecha_consulta),
+  KEY idx_consultas_tipo (tipo_consulta),
+  KEY idx_consultas_alumno (alumno_apellidos, alumno_nombres),
+  KEY idx_consultas_carrera_nombre (carrera_nombre),
+  KEY idx_consultas_estado (estado)
 ) ENGINE=InnoDB;
 
           CREATE TABLE auditoria_eventos
@@ -280,7 +315,7 @@ CREATE TABLE anotaciones
   anio_egreso SMALLINT UNSIGNED NOT NULL,
   anios_egresado SMALLINT UNSIGNED NOT NULL,
   estado ENUM
-            ('BORRADOR', 'EMITIDA', 'ANULADA') NOT NULL DEFAULT 'BORRADOR',
+            ('CREADO', 'EMITIDA', 'IMPRESO', 'ANULADA') NOT NULL DEFAULT 'CREADO',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
             UPDATE CURRENT_TIMESTAMP,
@@ -353,7 +388,7 @@ CREATE TABLE anotaciones
   facultad_nombre VARCHAR
                 (150) NOT NULL,
   estado ENUM
-                ('BORRADOR', 'EMITIDO', 'ANULADO') NOT NULL DEFAULT 'BORRADOR',
+                ('CREADO', 'EMITIDO', 'IMPRESO', 'ANULADO') NOT NULL DEFAULT 'CREADO',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
                 UPDATE CURRENT_TIMESTAMP,
@@ -419,7 +454,7 @@ CREATE TABLE anotaciones
   alumno_nombre_firma VARCHAR
                     (150) NULL,
   estado ENUM
-                    ('BORRADOR', 'REVISION', 'APROBADA', 'DENEGADA') NOT NULL DEFAULT 'BORRADOR',
+                    ('CREADO', 'REVISION', 'IMPRESO', 'APROBADA', 'DENEGADA') NOT NULL DEFAULT 'CREADO',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
                     UPDATE CURRENT_TIMESTAMP,
@@ -496,7 +531,7 @@ CREATE TABLE anotaciones
   facultad_firma_nombre VARCHAR
                         (150) NOT NULL,
   estado ENUM
-                        ('BORRADOR', 'EMITIDO', 'ANULADO') NOT NULL DEFAULT 'BORRADOR',
+                        ('CREADO', 'EMITIDO', 'IMPRESO', 'ANULADO') NOT NULL DEFAULT 'CREADO',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON
                         UPDATE CURRENT_TIMESTAMP,

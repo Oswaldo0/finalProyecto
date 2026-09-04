@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { listarEquivalencias, obtenerEquivalencia } from "../../../application/equivalencias/equivalenciasUseCases.js";
+import {
+  listarEquivalencias,
+  marcarEquivalenciaImpresa,
+  obtenerEquivalencia,
+} from "../../../application/equivalencias/equivalenciasUseCases.js";
 import logoUrl from "../../../assets/images/LOGO_USO.png";
+import { PrintButton, PrintTable, PrintWindow, StatusBadge } from "../../components/shared/PrintWindow.jsx";
 
 export function ImprimirEquivalenciaPage() {
-  const navigate = useNavigate();
   const [documentos, setDocumentos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -47,6 +50,17 @@ export function ImprimirEquivalenciaPage() {
         alert("No se encontró la equivalencia seleccionada.");
         return;
       }
+
+      setDocumentos((items) =>
+        items.map((item) => (item.id === id ? { ...item, estado: "IMPRESO" } : item)),
+      );
+      marcarEquivalenciaImpresa(id)
+        .then((impresa) => {
+          setDocumentos((items) =>
+            items.map((item) => (item.id === id ? { ...item, estado: impresa.estado } : item)),
+          );
+        })
+        .catch(() => {});
 
       const detallesHtml = (equivalencia.detalles ?? []).map((detalle, index) => `
         <tr>
@@ -162,87 +176,40 @@ export function ImprimirEquivalenciaPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-slate-700">Imprimir equivalencia</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Aquí se listarán las solicitudes de equivalencia generadas para su impresión.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigate("/equivalencias")}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            Volver
-          </button>
-        </div>
-
-        {cargando && (
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-            Cargando equivalencias...
-          </div>
+    <PrintWindow
+      title="Imprimir equivalencia"
+      description="Aqui se listan las solicitudes de equivalencia generadas para su impresion."
+      backTo="/equivalencias"
+      notice={
+        error
+          ? { tone: "error", title: "Error al cargar datos", detail: error }
+          : cargando
+            ? { tone: "neutral", title: "Cargando equivalencias..." }
+            : documentos.length === 0
+              ? { title: "Sin documentos disponibles", detail: "No hay solicitudes de equivalencia para mostrar." }
+              : null
+      }
+    >
+      <PrintTable
+        columns={["Correlativo", "Fecha", "Alumno", "Carrera destino", "Decision", "Estado", "Accion"]}
+        loading={cargando}
+        loadingText="Cargando equivalencias..."
+        empty="No hay solicitudes de equivalencia para mostrar."
+        rows={documentos}
+        renderRow={(documento) => (
+          <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
+            <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{formatFecha(documento.fecha_solicitud)}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.alumno_nombre}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.carrera_destino || "-"}</td>
+            <td className="border-t border-slate-200 px-4 py-3">-</td>
+            <td className="border-t border-slate-200 px-4 py-3"><StatusBadge value={documento.estado} /></td>
+            <td className="border-t border-slate-200 px-4 py-3 text-center">
+              <PrintButton onClick={() => handleImprimir(documento.id)} disabled={cargandoDoc} />
+            </td>
+          </tr>
         )}
-
-        {error && (
-          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-            <p className="text-sm font-semibold text-red-800">Error al cargar datos</p>
-            <p className="mt-1 text-xs text-red-700">{error}</p>
-          </div>
-        )}
-
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="min-w-full border-collapse text-sm">
-            <thead className="bg-slate-100">
-              <tr>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Correlativo</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Fecha</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Alumno</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Carrera destino</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Decisión</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Estado</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-center font-semibold text-slate-700">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!cargando && documentos.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-4 py-10 text-center text-sm text-slate-500">
-                    No hay solicitudes de equivalencia para mostrar.
-                  </td>
-                </tr>
-              ) : (
-                documentos.map((documento) => (
-                  <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{formatFecha(documento.fecha_solicitud)}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.alumno_nombre}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.carrera_destino || "-"}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">-</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.estado}</td>
-                    <td className="border-t border-slate-200 px-4 py-3 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleImprimir(documento.id)}
-                        disabled={cargandoDoc}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: "0.95rem" }}>
-                          print
-                        </span>
-                        Imprimir
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+      />
+    </PrintWindow>
   );
 }

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { listarPenalidades, obtenerPenalidad } from "../../../application/penalidad/penalidadUseCases.js";
 import logoUrl from "../../../assets/images/LOGO_USO.png";
 import { openPrintWindow } from "../../utils/printDocument.js";
+import { PreviewModal, PrintButton, PrintTable, PrintWindow, StatusBadge } from "../../components/shared/PrintWindow.jsx";
 
 function separarNombreCompleto(nombre = "") {
   const partes = String(nombre).trim().split(/\s+/).filter(Boolean);
@@ -120,7 +120,6 @@ function DocumentoPenalidad({ doc }) {
 }
 
 export function ImprimirPenalidadPage() {
-  const navigate = useNavigate();
   const [penalidades, setPenalidades] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [docSeleccionado, setDocSeleccionado] = useState(null);
@@ -236,140 +235,53 @@ export function ImprimirPenalidadPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-slate-700">
-              Imprimir penalidad
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Selecciona un documento de penalidad para previsualizarlo e
-              imprimirlo.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate("/penalidad")}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            Volver
-          </button>
-        </div>
-
-        {cargando ? (
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
-            Cargando registros...
-          </div>
-        ) : penalidades.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
-            <p className="text-sm font-semibold text-blue-800">Sin documentos disponibles</p>
-            <p className="mt-1 text-xs text-blue-700">
-              Crea tu primera penalidad en "Crear penalidad" para verla aquí.
-            </p>
-          </div>
-        ) : null}
-
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="min-w-full border-collapse text-sm">
-            <thead className="bg-slate-100">
-              <tr>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                  Correlativo
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                  Fecha
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                  Alumno
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                  Carrera
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                  Ciclo de reingreso
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">
-                  Estado
-                </th>
-                <th className="border-b border-slate-200 px-4 py-3 text-center font-semibold text-slate-700">
-                  Acción
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {penalidades.length === 0 && !cargando ? (
-                <tr>
-                  <td colSpan="7" className="px-4 py-10 text-center text-sm text-slate-500">
-                    No hay documentos de penalidad para mostrar.
-                  </td>
-                </tr>
-              ) : (
-                penalidades.map((documento) => (
-                  <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">
-                      {documento.fecha ? documento.fecha.slice(0, 10) : ""}
-                    </td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.alumno_nombre}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.carrera_nombre}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.ciclo_reingreso}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.estado}</td>
-                    <td className="border-t border-slate-200 px-4 py-3 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleImprimir(documento.id)}
-                        disabled={cargandoDoc}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: "0.95rem" }}>
-                          print
-                        </span>
-                        Imprimir
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+    <>
+      <PrintWindow
+        title="Imprimir penalidad"
+        description="Selecciona un documento de penalidad para previsualizarlo e imprimirlo."
+        backTo="/penalidad"
+        notice={
+          !cargando && penalidades.length === 0
+            ? {
+                title: "Sin documentos disponibles",
+                detail: "Crea tu primera penalidad para verla aqui.",
+              }
+            : null
+        }
+      >
+        <PrintTable
+          columns={["Correlativo", "Fecha", "Alumno", "Carrera", "Ciclo de reingreso", "Estado", "Accion"]}
+          loading={cargando}
+          loadingText="Cargando registros..."
+          empty="No hay documentos de penalidad para mostrar."
+          rows={penalidades}
+          renderRow={(documento) => (
+            <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
+              <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
+              <td className="border-t border-slate-200 px-4 py-3">{documento.fecha ? documento.fecha.slice(0, 10) : ""}</td>
+              <td className="border-t border-slate-200 px-4 py-3">{documento.alumno_nombre}</td>
+              <td className="border-t border-slate-200 px-4 py-3">{documento.carrera_nombre}</td>
+              <td className="border-t border-slate-200 px-4 py-3">{documento.ciclo_reingreso}</td>
+              <td className="border-t border-slate-200 px-4 py-3"><StatusBadge value={documento.estado} /></td>
+              <td className="border-t border-slate-200 px-4 py-3 text-center">
+                <PrintButton onClick={() => handleImprimir(documento.id)} disabled={cargandoDoc} />
+              </td>
+            </tr>
+          )}
+        />
+      </PrintWindow>
 
       {docSeleccionado && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 pt-10">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
-            <div className="flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-slate-50 px-5 py-3">
-              <span className="text-sm font-semibold text-slate-700">
-                Vista previa - {docSeleccionado.correlativo}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={ejecutarImpresion}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>
-                    print
-                  </span>
-                  Imprimir / Guardar PDF
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDocSeleccionado(null)}
-                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-
-            <div ref={printRef} className="p-2">
-              <DocumentoPenalidad doc={docSeleccionado} />
-            </div>
+        <PreviewModal
+          title={`Vista previa - ${docSeleccionado.correlativo}`}
+          onPrint={ejecutarImpresion}
+          onClose={() => setDocSeleccionado(null)}
+        >
+          <div ref={printRef} className="p-2">
+            <DocumentoPenalidad doc={docSeleccionado} />
           </div>
-        </div>
+        </PreviewModal>
       )}
-    </main>
+    </>
   );
 }

@@ -28,6 +28,10 @@ export function actualizarPenalidad(id, payload) {
   });
 }
 
+export function marcarPenalidadImpresa(id) {
+  return requestJson(`${BASE}/${id}/imprimir`, { method: "PATCH" });
+}
+
 export function eliminarPenalidad(id) {
   return requestJson(`${BASE}/${id}`, { method: "DELETE" });
 }

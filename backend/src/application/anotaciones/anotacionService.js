@@ -1,5 +1,6 @@
 import * as repo from "../../infrastructure/repositories/anotacionRepository.js";
 import {
+  assertAcademicCycle,
   assertAllowedValue,
   assertValidDate,
   requireFields,
@@ -7,7 +8,7 @@ import {
   validationError,
 } from "../shared/validation.js";
 
-const ESTADOS_ANOTACION = ["BORRADOR", "EMITIDA", "ANULADA"];
+const ESTADOS_ANOTACION = ["CREADO", "EMITIDA", "IMPRESO", "ANULADA"];
 const TIPOS_CATALOGO = ["observadores", "facultades", "horarios"];
 
 export function listar(filtros) {
@@ -44,6 +45,11 @@ export async function actualizar(id, body = {}) {
   return repo.update(id, body);
 }
 
+export async function marcarImpresa(id) {
+  await obtener(id);
+  return repo.markAsPrinted(id);
+}
+
 export async function eliminar(id) {
   await obtener(id);
   return repo.remove(id);
@@ -65,7 +71,8 @@ function validarAnotacion(anotacion = {}) {
     "observaciones",
   ]);
   assertValidDate(anotacion.fecha, "fecha", { required: true });
-  assertAllowedValue(anotacion.estado ?? "BORRADOR", ESTADOS_ANOTACION, "estado");
+  assertAcademicCycle(anotacion.ciclo, "ciclo");
+  assertAllowedValue(anotacion.estado ?? "CREADO", ESTADOS_ANOTACION, "estado");
 }
 
 function validarCatalogos(catalogos = {}) {

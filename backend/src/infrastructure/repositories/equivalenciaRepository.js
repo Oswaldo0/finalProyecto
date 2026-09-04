@@ -1,4 +1,5 @@
 import pool from "../database/mysqlPool.js";
+import { dateOnly } from "./dateOnly.js";
 
 function buildEquivalenciaCorrelativo(fechaSolicitud, createdAt, id) {
   if (!id) return null;
@@ -37,7 +38,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
     params,
   );
 
-  return { data: rows, total, page, limit };
+  return { data: rows.map(mapEquivalencia), total, page, limit };
 }
 
 export async function findById(id) {
@@ -80,7 +81,7 @@ export async function findById(id) {
     [id],
   );
 
-  return { ...equivalencia, detalles };
+  return { ...mapEquivalencia(equivalencia), detalles };
 }
 
 export async function create({ equivalencia, detalles = [] }) {
@@ -98,21 +99,21 @@ export async function create({ equivalencia, detalles = [] }) {
       [
         equivalencia.estudiante_id ?? null,
         equivalencia.usuario_id ?? null,
-        equivalencia.fecha_solicitud ?? null,
+        dateOnly(equivalencia.fecha_solicitud) ?? null,
         equivalencia.alumno_nombre,
         equivalencia.carreras_cursadas ?? null,
         equivalencia.carrera_destino ?? null,
         equivalencia.texto_solicitud,
         equivalencia.notas_universidad ?? null,
         equivalencia.decano_nombre ?? null,
-        equivalencia.fecha_decano ?? null,
+        dateOnly(equivalencia.fecha_decano) ?? null,
         equivalencia.alumno_nombre_firma ?? null,
-        equivalencia.estado ?? "BORRADOR",
+        equivalencia.estado ?? "CREADO",
       ],
     );
 
     const equivalenciaId = result.insertId;
-    const correlativo = buildEquivalenciaCorrelativo(equivalencia.fecha_solicitud, null, equivalenciaId);
+    const correlativo = buildEquivalenciaCorrelativo(dateOnly(equivalencia.fecha_solicitud), null, equivalenciaId);
 
     if (correlativo) {
       await conn.query(
@@ -167,21 +168,21 @@ export async function update(id, { equivalencia, detalles }) {
       [
         equivalencia.estudiante_id ?? null,
         equivalencia.usuario_id ?? null,
-        equivalencia.fecha_solicitud ?? null,
+        dateOnly(equivalencia.fecha_solicitud) ?? null,
         equivalencia.alumno_nombre,
         equivalencia.carreras_cursadas ?? null,
         equivalencia.carrera_destino ?? null,
         equivalencia.texto_solicitud,
         equivalencia.notas_universidad ?? null,
         equivalencia.decano_nombre ?? null,
-        equivalencia.fecha_decano ?? null,
+        dateOnly(equivalencia.fecha_decano) ?? null,
         equivalencia.alumno_nombre_firma ?? null,
-        equivalencia.estado ?? "BORRADOR",
+        equivalencia.estado ?? "CREADO",
         id,
       ],
     );
 
-    const correlativo = buildEquivalenciaCorrelativo(equivalencia.fecha_solicitud, null, id);
+    const correlativo = buildEquivalenciaCorrelativo(dateOnly(equivalencia.fecha_solicitud), null, id);
     if (correlativo) {
       await conn.query(`UPDATE equivalencias SET correlativo = ? WHERE id = ?`, [correlativo, id]);
     }
@@ -223,4 +224,24 @@ export async function update(id, { equivalencia, detalles }) {
 export async function remove(id) {
   const [result] = await pool.query(`DELETE FROM equivalencias WHERE id = ?`, [id]);
   return result.affectedRows > 0;
+}
+
+export async function markAsPrinted(id) {
+  await pool.query(
+    `UPDATE equivalencias
+     SET estado = 'IMPRESO'
+     WHERE id = ? AND estado = 'CREADO'`,
+    [id],
+  );
+
+  return findById(id);
+}
+
+function mapEquivalencia(row) {
+  if (!row) return null;
+  return {
+    ...row,
+    fecha_solicitud: dateOnly(row.fecha_solicitud),
+    fecha_decano: dateOnly(row.fecha_decano),
+  };
 }

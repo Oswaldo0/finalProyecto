@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1220" viewBox="0 0 1800 1220">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155" />
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 16px Arial, sans-serif; fill: #475569; }
+      .boundary { fill: #ffffff; stroke: #94a3b8; stroke-width: 2; rx: 18; ry: 18; }
+      .boundary-title { font: 700 18px Arial, sans-serif; fill: #334155; }
+      .actor-name { font: 700 14px Arial, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .usecase { fill: #e0f2fe; stroke: #0369a1; stroke-width: 1.6; }
+      .usecase-alt { fill: #dcfce7; stroke: #15803d; stroke-width: 1.6; }
+      .usecase-report { fill: #fef3c7; stroke: #ca8a04; stroke-width: 1.6; }
+      .usecase-admin { fill: #ede9fe; stroke: #7c3aed; stroke-width: 1.6; }
+      .uc-text { font: 700 13px Arial, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .line { stroke: #334155; stroke-width: 1.8; fill: none; }
+      .include { stroke: #7c3aed; stroke-width: 1.6; stroke-dasharray: 7 6; fill: none; marker-end: url(#arrow); }
+      .note { font: 400 13px Arial, sans-serif; fill: #475569; }
+      .label { font: 700 11px Arial, sans-serif; fill: #7c3aed; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1800" height="1220"/>
+  <text class="title" x="60" y="58">Diagrama UML de casos de uso</text>
+  <text class="subtitle" x="60" y="88">Sistema Académico USO - actores, módulos y funciones principales.</text>
+
+  <rect class="boundary" x="360" y="130" width="1060" height="980"/>
+  <text class="boundary-title" x="390" y="165">Sistema Académico USO</text>
+
+  <!-- Actors -->
+  <g id="actor-admin" transform="translate(130 200)">
+    <circle cx="0" cy="0" r="22" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="22" x2="0" y2="82" stroke="#0f172a" stroke-width="2"/>
+    <line x1="-40" y1="45" x2="40" y2="45" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="82" x2="-34" y2="128" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="82" x2="34" y2="128" stroke="#0f172a" stroke-width="2"/>
+    <text class="actor-name" x="0" y="158">Administrador</text>
+  </g>
+
+  <g id="actor-operativo" transform="translate(130 520)">
+    <circle cx="0" cy="0" r="22" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="22" x2="0" y2="82" stroke="#0f172a" stroke-width="2"/>
+    <line x1="-40" y1="45" x2="40" y2="45" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="82" x2="-34" y2="128" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="82" x2="34" y2="128" stroke="#0f172a" stroke-width="2"/>
+    <text class="actor-name" x="0" y="158">Decano</text>
+    <text class="actor-name" x="0" y="177">Secretario</text>
+    <text class="actor-name" x="0" y="196">Operador</text>
+  </g>
+
+  <g id="actor-consulta" transform="translate(130 875)">
+    <circle cx="0" cy="0" r="22" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="22" x2="0" y2="82" stroke="#0f172a" stroke-width="2"/>
+    <line x1="-40" y1="45" x2="40" y2="45" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="82" x2="-34" y2="128" stroke="#0f172a" stroke-width="2"/>
+    <line x1="0" y1="82" x2="34" y2="128" stroke="#0f172a" stroke-width="2"/>
+    <text class="actor-name" x="0" y="158">Consulta</text>
+  </g>
+
+  <!-- Use cases -->
+  <ellipse class="usecase" cx="550" cy="220" rx="130" ry="42"/>
+  <text class="uc-text" x="550" y="216">Iniciar sesión</text>
+  <text class="uc-text" x="550" y="233">CU-01</text>
+
+  <ellipse class="usecase" cx="550" cy="320" rx="130" ry="42"/>
+  <text class="uc-text" x="550" y="316">Cerrar sesión</text>
+  <text class="uc-text" x="550" y="333">CU-02</text>
+
+  <ellipse class="usecase-admin" cx="875" cy="220" rx="150" ry="42"/>
+  <text class="uc-text" x="875" y="216">Gestionar usuarios</text>
+  <text class="uc-text" x="875" y="233">CU-03</text>
+
+  <ellipse class="usecase-alt" cx="560" cy="470" rx="165" ry="44"/>
+  <text class="uc-text" x="560" y="466">Crear documento</text>
+  <text class="uc-text" x="560" y="483">CU-04,07,10,13,16,19</text>
+
+  <ellipse class="usecase-alt" cx="890" cy="470" rx="165" ry="44"/>
+  <text class="uc-text" x="890" y="466">Modificar documento</text>
+  <text class="uc-text" x="890" y="483">CU-05,08,11,14,17,20</text>
+
+  <ellipse class="usecase-alt" cx="1220" cy="470" rx="165" ry="44"/>
+  <text class="uc-text" x="1220" y="466">Imprimir documento</text>
+  <text class="uc-text" x="1220" y="483">CU-06,09,12,15,18,21</text>
+
+  <ellipse class="usecase" cx="560" cy="625" rx="160" ry="42"/>
+  <text class="uc-text" x="560" y="621">Gestionar penalidad</text>
+  <text class="uc-text" x="560" y="638">Crear / modificar / imprimir</text>
+
+  <ellipse class="usecase" cx="890" cy="625" rx="160" ry="42"/>
+  <text class="uc-text" x="890" y="621">Gestionar retiro ciclo</text>
+  <text class="uc-text" x="890" y="638">Crear / modificar / imprimir</text>
+
+  <ellipse class="usecase" cx="1220" cy="625" rx="160" ry="42"/>
+  <text class="uc-text" x="1220" y="621">Gestionar equivalencia</text>
+  <text class="uc-text" x="1220" y="638">Crear / modificar / imprimir</text>
+
+  <ellipse class="usecase" cx="560" cy="745" rx="160" ry="42"/>
+  <text class="uc-text" x="560" y="741">Gestionar absorción</text>
+  <text class="uc-text" x="560" y="758">Crear / modificar / imprimir</text>
+
+  <ellipse class="usecase" cx="890" cy="745" rx="160" ry="42"/>
+  <text class="uc-text" x="890" y="741">Gestionar anotación</text>
+  <text class="uc-text" x="890" y="758">Crear / modificar / imprimir</text>
+
+  <ellipse class="usecase" cx="1220" cy="745" rx="160" ry="42"/>
+  <text class="uc-text" x="1220" y="741">Gestionar consulta</text>
+  <text class="uc-text" x="1220" y="758">Crear / modificar / imprimir</text>
+
+  <ellipse class="usecase-report" cx="560" cy="930" rx="160" ry="44"/>
+  <text class="uc-text" x="560" y="926">Consultar dashboard</text>
+  <text class="uc-text" x="560" y="943">CU-22</text>
+
+  <ellipse class="usecase-report" cx="890" cy="930" rx="160" ry="44"/>
+  <text class="uc-text" x="890" y="926">Consultar histórico</text>
+  <text class="uc-text" x="890" y="943">CU-23</text>
+
+  <ellipse class="usecase-report" cx="1220" cy="930" rx="160" ry="44"/>
+  <text class="uc-text" x="1220" y="926">Imprimir reporte PDF</text>
+  <text class="uc-text" x="1220" y="943">CU-24</text>
+
+  <!-- Actor associations -->
+  <path class="line" d="M170 230 L420 220"/>
+  <path class="line" d="M170 248 L420 320"/>
+  <path class="line" d="M170 218 L725 220"/>
+  <path class="line" d="M170 250 L430 470"/>
+  <path class="line" d="M170 260 L730 470"/>
+  <path class="line" d="M170 270 L1060 470"/>
+  <path class="line" d="M170 560 L420 220"/>
+  <path class="line" d="M170 580 L420 320"/>
+  <path class="line" d="M170 610 L395 470"/>
+  <path class="line" d="M170 620 L725 470"/>
+  <path class="line" d="M170 630 L1055 470"/>
+  <path class="line" d="M170 660 L400 930"/>
+  <path class="line" d="M170 670 L730 930"/>
+  <path class="line" d="M170 920 L420 220"/>
+  <path class="line" d="M170 940 L420 320"/>
+  <path class="line" d="M170 970 L400 930"/>
+  <path class="line" d="M170 985 L730 930"/>
+  <path class="line" d="M170 1000 L1060 930"/>
+
+  <!-- Includes / generalizations -->
+  <path class="include" d="M560 514 C560 550 560 570 560 583"/>
+  <path class="include" d="M560 514 C690 560 750 590 785 608"/>
+  <path class="include" d="M560 514 C840 545 1040 585 1100 608"/>
+  <path class="include" d="M560 514 C560 650 560 680 560 703"/>
+  <path class="include" d="M560 514 C720 645 820 690 835 707"/>
+  <path class="include" d="M560 514 C860 650 1110 690 1165 707"/>
+  <text class="label" x="588" y="555">«incluye»</text>
+
+  <path class="include" d="M890 514 C780 560 650 585 590 610"/>
+  <path class="include" d="M890 514 L890 583"/>
+  <path class="include" d="M890 514 C1000 560 1130 590 1190 610"/>
+  <path class="include" d="M890 514 C760 650 640 690 600 707"/>
+  <path class="include" d="M890 514 L890 703"/>
+  <path class="include" d="M890 514 C1010 650 1140 690 1190 707"/>
+
+  <path class="include" d="M1220 514 C1050 560 720 585 615 610"/>
+  <path class="include" d="M1220 514 C1080 560 980 590 930 610"/>
+  <path class="include" d="M1220 514 L1220 583"/>
+  <path class="include" d="M1220 514 C1040 660 710 690 615 707"/>
+  <path class="include" d="M1220 514 C1080 660 980 690 930 707"/>
+  <path class="include" d="M1220 514 L1220 703"/>
+
+  <path class="include" d="M1220 886 C1135 860 1020 870 940 895"/>
+  <path class="include" d="M1220 886 C1085 850 720 850 610 895"/>
+  <text class="label" x="1068" y="858">«usa filtros»</text>
+
+  <!-- Legend -->
+  <rect x="1448" y="145" width="280" height="245" rx="12" ry="12" fill="#ffffff" stroke="#cbd5e1"/>
+  <text class="boundary-title" x="1470" y="178">Leyenda</text>
+  <ellipse class="usecase-admin" cx="1492" cy="212" rx="28" ry="14"/>
+  <text class="note" x="1535" y="217">Administración</text>
+  <ellipse class="usecase-alt" cx="1492" cy="248" rx="28" ry="14"/>
+  <text class="note" x="1535" y="253">Crear / modificar / imprimir</text>
+  <ellipse class="usecase" cx="1492" cy="284" rx="28" ry="14"/>
+  <text class="note" x="1535" y="289">Módulos documentales</text>
+  <ellipse class="usecase-report" cx="1492" cy="320" rx="28" ry="14"/>
+  <text class="note" x="1535" y="325">Informes y reportes</text>
+  <path class="include" d="M1465 356 L1525 356"/>
+  <text class="note" x="1535" y="361">Relación «incluye»</text>
+  <text class="note" x="1470" y="382">Los permisos dependen del rol autenticado.</text>
+</svg>

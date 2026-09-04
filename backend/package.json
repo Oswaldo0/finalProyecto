@@ -6,10 +6,15 @@
   "scripts": {
     "dev": "nodemon src/presentation/server.js",
     "start": "node src/presentation/server.js",
+    "start:prod": "node src/presentation/server.js",
     "test": "node --test src/application/shared/validation.test.js",
+    "migrate:all": "npm run migrate:auth && npm run migrate:auditoria && npm run migrate:anotaciones && npm run migrate:consultas && npm run migrate:correlativos && npm run migrate:impreso && npm run migrate:creado && npm run migrate:informes",
     "migrate:auth": "node scripts/apply_auth_migration.mjs",
     "migrate:auditoria": "node scripts/apply_auditoria_migration.mjs",
     "migrate:anotaciones": "node scripts/apply_anotaciones_migration.mjs",
+    "migrate:consultas": "node scripts/apply_consultas_migration.mjs",
+    "migrate:impreso": "node scripts/apply_impreso_estado_migration.mjs",
+    "migrate:creado": "node scripts/apply_creado_estado_migration.mjs",
     "migrate:correlativos": "node scripts/apply_correlativos_migration.mjs",
     "migrate:informes": "node scripts/apply_informes_migration.mjs"
   },

@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  assertAcademicCycle,
   assertAllowedValue,
   assertNonNegativeDecimal,
   assertPositiveInteger,
   assertValidDate,
+  calculateAcademicUv,
   requireFields,
   requireNonEmptyArray,
   requireObject,
@@ -30,8 +32,8 @@ test("requireNonEmptyArray exige al menos un detalle", () => {
 });
 
 test("assertAllowedValue valida enumeraciones", () => {
-  assert.throws(() => assertAllowedValue("CERRADA", ["BORRADOR"], "estado"), /estado/);
-  assert.doesNotThrow(() => assertAllowedValue("BORRADOR", ["BORRADOR"], "estado"));
+  assert.throws(() => assertAllowedValue("CERRADA", ["CREADO"], "estado"), /estado/);
+  assert.doesNotThrow(() => assertAllowedValue("CREADO", ["CREADO"], "estado"));
 });
 
 test("assertNonNegativeDecimal acepta decimales no negativos", () => {
@@ -52,4 +54,21 @@ test("assertValidDate valida fechas requeridas y opcionales", () => {
   assert.throws(() => assertValidDate("NO-FECHA", "fecha"), /fecha/);
   assert.doesNotThrow(() => assertValidDate("", "fecha"));
   assert.doesNotThrow(() => assertValidDate("2026-06-17", "fecha"));
+});
+
+test("assertAcademicCycle valida ciclo y anio academico", () => {
+  assert.doesNotThrow(() => assertAcademicCycle("I-2026", "ciclo"));
+  assert.doesNotThrow(() => assertAcademicCycle("II-2026", "ciclo"));
+  assert.doesNotThrow(() => assertAcademicCycle("INTERCICLO-2026", "ciclo"));
+  assert.throws(() => assertAcademicCycle("III-2026", "ciclo"), /ciclo/);
+  assert.throws(() => assertAcademicCycle("I", "ciclo"), /ciclo/);
+  assert.throws(() => assertAcademicCycle("CICLO 01-2026", "ciclo"), /ciclo/);
+});
+
+test("calculateAcademicUv calcula UV a partir de horas academicas", () => {
+  assert.equal(calculateAcademicUv(80), 4);
+  assert.equal(calculateAcademicUv("90"), 4.5);
+  assert.equal(calculateAcademicUv(""), null);
+  assert.throws(() => calculateAcademicUv(-1), /horas academicas/);
+  assert.throws(() => calculateAcademicUv("abc"), /horas academicas/);
 });

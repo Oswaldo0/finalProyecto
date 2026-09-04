@@ -5,11 +5,15 @@ const router = Router();
 
 router.get("/resumen", async (req, res, next) => {
   try {
-    const { fechaDesde, fechaHasta, tipoDocumento, estado } = req.query;
+    const { fechaDesde, fechaHasta, anio, ciclo, materia, tipoDocumento, coordinador, estado } = req.query;
     const result = await service.obtenerResumen({
       fechaDesde: fechaDesde || null,
       fechaHasta: fechaHasta || null,
+      anio: anio || "",
+      ciclo: ciclo || "",
+      materia: materia || "",
       tipoDocumento: tipoDocumento || "",
+      coordinador: coordinador || "",
       estado: estado || "",
     });
     res.json(result);
@@ -29,12 +33,16 @@ router.get("/opciones", async (_req, res, next) => {
 
 router.get("/pdf", async (req, res, next) => {
   try {
-    const { fechaDesde, fechaHasta, tipoDocumento, estado } = req.query;
+    const { fechaDesde, fechaHasta, anio, ciclo, materia, tipoDocumento, coordinador, estado } = req.query;
     await service.generarPdf(
       {
         fechaDesde: fechaDesde || null,
         fechaHasta: fechaHasta || null,
+        anio: anio || "",
+        ciclo: ciclo || "",
+        materia: materia || "",
         tipoDocumento: tipoDocumento || "",
+        coordinador: coordinador || "",
         estado: estado || "",
       },
       res,

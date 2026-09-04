@@ -1,10 +1,13 @@
-﻿import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { listarAbsorciones, obtenerAbsorcion } from "../../../application/absorciones/absorcionesUseCases.js";
+import { useEffect, useState } from "react";
+import {
+  listarAbsorciones,
+  marcarAbsorcionImpresa,
+  obtenerAbsorcion,
+} from "../../../application/absorciones/absorcionesUseCases.js";
 import logoUrl from "../../../assets/images/LOGO_USO.png";
+import { PrintButton, PrintTable, PrintWindow, StatusBadge } from "../../components/shared/PrintWindow.jsx";
 
 export function ImprimirAbsorcionPage() {
-  const navigate = useNavigate();
   const [absorciones, setAbsorciones] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -19,6 +22,16 @@ export function ImprimirAbsorcionPage() {
   async function handleImprimir(id) {
     try {
       const abs = await obtenerAbsorcion(id);
+      setAbsorciones((items) =>
+        items.map((item) => (item.id === id ? { ...item, estado: "IMPRESO" } : item)),
+      );
+      marcarAbsorcionImpresa(id)
+        .then((impresa) => {
+          setAbsorciones((items) =>
+            items.map((item) => (item.id === id ? { ...item, estado: impresa.estado } : item)),
+          );
+        })
+        .catch(() => {});
       const fullLogoUrl = window.location.origin + logoUrl;
 
       const absorbidasHtml = (abs.absorbidas ?? [])
@@ -101,78 +114,38 @@ export function ImprimirAbsorcionPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-slate-700">Imprimir absorción</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Aquí se listarán los dictámenes de absorción generados para su impresión.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate("/absorciones")}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            Volver
-          </button>
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <p className="text-sm font-semibold text-blue-800">{error || (cargando ? "Cargando documentos..." : absorciones.length ? "Seleccione un dictamen para imprimir." : "No hay dictámenes de absorción para mostrar.")}</p>
-          <p className="mt-1 text-xs text-blue-700">
-            {cargando
-              ? "Espere mientras se carga la información desde el servidor."
-              : "Use el botón Imprimir para generar una vista de impresión con los datos guardados."}
-          </p>
-        </div>
-
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="min-w-full border-collapse text-sm">
-            <thead className="bg-slate-100">
-              <tr>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Correlativo</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Fecha</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Alumno</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Carrera origen</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Plan solicitado</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Estado</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-center font-semibold text-slate-700">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {absorciones.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="px-4 py-10 text-center text-sm text-slate-500">
-                    {cargando ? "Cargando..." : "No hay dictámenes de absorción para mostrar."}
-                  </td>
-                </tr>
-              ) : (
-                absorciones.map((documento) => (
-                  <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.fecha ? documento.fecha.slice(0, 10) : ""}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.alumno_nombre}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.carrera_origen}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.plan_solicitado}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.estado}</td>
-                    <td className="border-t border-slate-200 px-4 py-3 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleImprimir(documento.id)}
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
-                      >
-                        Imprimir
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+    <PrintWindow
+      title="Imprimir absorcion"
+      description="Aqui se listan los dictamenes de absorcion generados para su impresion."
+      backTo="/absorciones"
+      notice={{
+        tone: error ? "error" : "info",
+        title: error || (cargando ? "Cargando documentos..." : absorciones.length ? "Seleccione un dictamen para imprimir." : "No hay dictamenes de absorcion para mostrar."),
+        detail: cargando
+          ? "Espere mientras se carga la informacion desde el servidor."
+          : "Use el boton Imprimir para generar una vista de impresion con los datos guardados.",
+      }}
+    >
+      <PrintTable
+        columns={["Correlativo", "Fecha", "Alumno", "Carrera origen", "Plan solicitado", "Estado", "Accion"]}
+        loading={cargando}
+        loadingText="Cargando dictamenes..."
+        empty="No hay dictamenes de absorcion para mostrar."
+        rows={absorciones}
+        renderRow={(documento) => (
+          <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
+            <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.fecha ? documento.fecha.slice(0, 10) : ""}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.alumno_nombre}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.carrera_origen}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.plan_solicitado}</td>
+            <td className="border-t border-slate-200 px-4 py-3"><StatusBadge value={documento.estado} /></td>
+            <td className="border-t border-slate-200 px-4 py-3 text-center">
+              <PrintButton onClick={() => handleImprimir(documento.id)} />
+            </td>
+          </tr>
+        )}
+      />
+    </PrintWindow>
   );
 }

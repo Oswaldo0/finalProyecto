@@ -36,5 +36,10 @@ export const navRoutes = [
     path: "/informes",
     icon: informesIcon,
     iconClassName: "rotate-90"
+  },
+  {
+    label: "Consultas",
+    path: "/consultas",
+    iconName: "manage_search"
   }
 ];

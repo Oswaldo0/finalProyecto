@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { crearEquivalencia } from "../../../application/equivalencias/equivalenciasUseCases.js";
+import { AcademicUvFields } from "../../components/shared/AcademicUvFields.jsx";
 import { normalizeNonNegativeDecimal, toUppercaseText } from "../../utils/formNormalizers.js";
 
 const TABLA_INICIAL = [
   {
     asignaturaCursada: "",
+    horasAcademicas: "",
     uv: "",
     nota: "",
     institucion: "",
@@ -38,7 +40,7 @@ export function CrearEquivalenciaPage() {
   const [fechaDecano, setFechaDecano] = useState("");
 
   function normalizeTablaField(field, value) {
-    if (field === "uv" || field === "nota") return normalizeNonNegativeDecimal(value);
+    if (field === "nota") return normalizeNonNegativeDecimal(value);
     if (field === "asignaturaCursada" || field === "asignaturaSolicitada" || field === "institucion") {
       return toUppercaseText(value);
     }
@@ -50,6 +52,12 @@ export function CrearEquivalenciaPage() {
       prev.map((row, i) =>
         i === index ? { ...row, [field]: normalizeTablaField(field, value) } : row,
       ),
+    );
+  }
+
+  function handleTablaUvChange(index, horasAcademicas, uv) {
+    setTabla((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, horasAcademicas, uv } : row)),
     );
   }
 
@@ -91,6 +99,7 @@ export function CrearEquivalenciaPage() {
         .filter((row) => row.asignaturaCursada.trim() !== "" && row.asignaturaSolicitada.trim() !== "")
         .map((row) => ({
           asignatura_cursada: row.asignaturaCursada.trim(),
+          horas_academicas: row.horasAcademicas !== "" ? Number(row.horasAcademicas) : null,
           uv: row.uv !== "" ? Number(row.uv) : null,
           nota: row.nota !== "" ? Number(row.nota) : null,
           institucion_nombre: row.institucion.trim() || null,
@@ -109,7 +118,7 @@ export function CrearEquivalenciaPage() {
           decano_nombre: firmaDecano.trim() || null,
           fecha_decano: fechaDecano || null,
           alumno_nombre_firma: firmaAlumno.trim() || null,
-          estado: "BORRADOR",
+          estado: "CREADO",
         },
         detalles,
       };
@@ -174,7 +183,7 @@ export function CrearEquivalenciaPage() {
                 <thead className="bg-slate-100 text-xs uppercase tracking-wide text-slate-600">
                   <tr>
                     <Th>Asignatura cursada</Th>
-                    <Th center>U.V.</Th>
+                    <Th center>Horas / U.V.</Th>
                     <Th center>Nota</Th>
                     <Th>Institución</Th>
                     <Th>Asignatura solicitada</Th>
@@ -186,7 +195,14 @@ export function CrearEquivalenciaPage() {
                   {tabla.map((row, index) => (
                     <tr key={index} className="odd:bg-white even:bg-slate-50">
                       <Td><TableInput value={row.asignaturaCursada} onChange={(value) => handleTablaChange(index, "asignaturaCursada", value)} placeholder="Asignatura cursada" /></Td>
-                      <Td><TableInput type="number" min="0" step="0.01" value={row.uv} onChange={(value) => handleTablaChange(index, "uv", value)} placeholder="0.00" center /></Td>
+                      <Td>
+                        <AcademicUvFields
+                          compact
+                          hours={row.horasAcademicas}
+                          uv={row.uv}
+                          onChange={(hours, uv) => handleTablaUvChange(index, hours, uv)}
+                        />
+                      </Td>
                       <Td><TableInput type="number" min="0" step="0.01" value={row.nota} onChange={(value) => handleTablaChange(index, "nota", value)} placeholder="0.00" center /></Td>
                       <Td><TableInput value={row.institucion} onChange={(value) => handleTablaChange(index, "institucion", value)} placeholder="Institución" /></Td>
                       <Td><TableInput value={row.asignaturaSolicitada} onChange={(value) => handleTablaChange(index, "asignaturaSolicitada", value)} placeholder="Asignatura solicitada" /></Td>

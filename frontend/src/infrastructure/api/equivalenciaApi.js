@@ -28,6 +28,10 @@ export function actualizarEquivalencia(id, payload) {
   });
 }
 
+export function marcarEquivalenciaImpresa(id) {
+  return requestJson(`${BASE}/${id}/imprimir`, { method: "PATCH" });
+}
+
 export function eliminarEquivalencia(id) {
   return requestJson(`${BASE}/${id}`, { method: "DELETE" });
 }

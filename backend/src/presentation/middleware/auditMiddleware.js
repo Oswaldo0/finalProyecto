@@ -13,7 +13,7 @@ function getEntityFromPath(path) {
 }
 
 export function auditMutations(req, res, next) {
-  const action = ACTION_BY_METHOD[req.method];
+  const action = req.path.endsWith("/imprimir") ? "IMPRIMIR" : ACTION_BY_METHOD[req.method];
   const shouldAudit = action || req.path.endsWith("/pdf");
 
   if (!shouldAudit) {

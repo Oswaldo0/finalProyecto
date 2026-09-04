@@ -1,6 +1,7 @@
 import * as repo from "../../infrastructure/repositories/absorcionRepository.js";
 import PDFDocument from "pdfkit";
 import {
+  assertAcademicCycle,
   assertNonNegativeDecimal,
   assertValidDate,
   requireFields,
@@ -35,6 +36,11 @@ export async function actualizar(id, body) {
   validarCampos(absorcion);
   validarDetalles({ absorbidas, noExistentes, reprobadas });
   return repo.update(id, { absorcion, absorbidas, noExistentes, reprobadas });
+}
+
+export async function marcarImpresa(id) {
+  await obtener(id);
+  return repo.markAsPrinted(id);
 }
 
 export async function eliminar(id) {
@@ -133,6 +139,7 @@ function validarCampos(absorcion = {}) {
 
   requireFields(absorcion, requeridos);
   assertValidDate(absorcion.fecha, "fecha", { required: true });
+  assertAcademicCycle(absorcion.ciclo, "ciclo");
 }
 
 function validarDetalles({ absorbidas = [], noExistentes = [], reprobadas = [] }) {

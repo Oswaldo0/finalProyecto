@@ -17,6 +17,10 @@ import { CrearAnotacionPage } from "./pages/anotaciones/CrearAnotacionPage.jsx";
 import { ImprimirAnotacionPage } from "./pages/anotaciones/ImprimirAnotacionPage.jsx";
 import { ModificarAnotacionPage } from "./pages/anotaciones/ModificarAnotacionPage.jsx";
 import { LoginPage } from "./pages/auth/LoginPage.jsx";
+import { ConsultasPage } from "./pages/consultas/ConsultasPage.jsx";
+import { CrearConsultaPage } from "./pages/consultas/CrearConsultaPage.jsx";
+import { ImprimirConsultaPage } from "./pages/consultas/ImprimirConsultaPage.jsx";
+import { ModificarConsultaPage } from "./pages/consultas/ModificarConsultaPage.jsx";
 import { CrearEquivalenciaPage } from "./pages/equivalencias/CrearEquivalenciaPage.jsx";
 import { EquivalenciasPage } from "./pages/equivalencias/EquivalenciasPage.jsx";
 import { ImprimirEquivalenciaPage } from "./pages/equivalencias/ImprimirEquivalenciaPage.jsx";
@@ -131,6 +135,11 @@ export function App() {
                 <Route path="/informes/crear" element={<InformesPage />} />
                 <Route path="/informes/modificar" element={<InformesPage />} />
                 <Route path="/informes/imprimir" element={<InformesPage />} />
+
+                <Route path="/consultas" element={<ConsultasPage />} />
+                <Route path="/consultas/crear" element={<CrearConsultaPage />} />
+                <Route path="/consultas/modificar" element={<ModificarConsultaPage />} />
+                <Route path="/consultas/imprimir" element={<ImprimirConsultaPage />} />
 
                 <Route path="/usuario" element={<UsuarioPage user={user} />} />
 

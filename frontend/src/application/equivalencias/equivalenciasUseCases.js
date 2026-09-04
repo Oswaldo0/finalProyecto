@@ -3,6 +3,7 @@ import {
   crearEquivalencia as apiCrear,
   eliminarEquivalencia as apiEliminar,
   listarEquivalencias,
+  marcarEquivalenciaImpresa as apiMarcarImpresa,
   obtenerEquivalencia,
 } from "../../infrastructure/api/equivalenciaApi.js";
 
@@ -14,6 +15,10 @@ export function crearEquivalencia(payload) {
 
 export function modificarEquivalencia(id, payload) {
   return apiActualizar(id, payload);
+}
+
+export function marcarEquivalenciaImpresa(id) {
+  return apiMarcarImpresa(id);
 }
 
 export function eliminarEquivalencia(id) {

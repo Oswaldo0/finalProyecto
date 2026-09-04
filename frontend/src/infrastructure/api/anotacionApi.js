@@ -28,6 +28,10 @@ export function actualizarAnotacion(id, payload) {
   });
 }
 
+export function marcarAnotacionImpresa(id) {
+  return requestJson(`${BASE}/${id}/imprimir`, { method: "PATCH" });
+}
+
 export function obtenerCatalogosAnotaciones() {
   return requestJson(`${BASE}/catalogos`);
 }

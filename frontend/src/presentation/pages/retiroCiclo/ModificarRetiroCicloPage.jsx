@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   listarRetirosCiclo,
   obtenerRetiroCiclo,
   modificarRetiro,
 } from "../../../application/retiroCiclo/retiroCicloUseCases.js";
+import { AcademicCycleFields } from "../../components/shared/AcademicCycleFields.jsx";
+import { AcademicUvFields, hoursFromUv } from "../../components/shared/AcademicUvFields.jsx";
 import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const FORMULARIO_INICIAL = {
@@ -28,9 +30,10 @@ export function ModificarRetiroCicloPage() {
   const navigate = useNavigate();
   const [showCancelNotice, setShowCancelNotice] = useState(false);
   const [formulario, setFormulario] = useState(FORMULARIO_INICIAL);
-  const [materias, setMaterias] = useState([{ nombre: "", uv: "" }]);
+  const [materias, setMaterias] = useState([{ nombre: "", horasAcademicas: "", uv: "" }]);
 
   const [lista, setLista] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
   const [cargandoLista, setCargandoLista] = useState(true);
   const [retiroId, setRetiroId] = useState(null);
   const [cargandoFormulario, setCargandoFormulario] = useState(false);
@@ -45,6 +48,29 @@ export function ModificarRetiroCicloPage() {
       .catch(() => setLista([]))
       .finally(() => setCargandoLista(false));
   }, []);
+
+  const listaFiltrada = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return lista;
+
+    return lista.filter((retiro) => {
+      const texto = [
+        retiro.correlativo,
+        retiro.alumno_nombre,
+        retiro.carrera_nombre,
+        retiro.ciclo_a_retirar,
+        retiro.expediente,
+        retiro.carnet,
+        retiro.fecha ? retiro.fecha.slice(0, 10) : "",
+        retiro.estado,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return texto.includes(termino);
+    });
+  }, [busqueda, lista]);
 
   async function seleccionarRetiro(id) {
     setCargandoFormulario(true);
@@ -79,9 +105,10 @@ export function ModificarRetiroCicloPage() {
         ret.asignaturas?.length > 0
           ? ret.asignaturas.map((a) => ({
               nombre: a.asignatura_nombre,
+              horasAcademicas: hoursFromUv(a.uv),
               uv: a.uv != null ? String(a.uv) : "",
             }))
-          : [{ nombre: "", uv: "" }],
+          : [{ nombre: "", horasAcademicas: "", uv: "" }],
       );
 
       setTimeout(
@@ -111,8 +138,14 @@ export function ModificarRetiroCicloPage() {
     );
   }
 
+  function handleMateriaUvChange(index, horasAcademicas, uv) {
+    setMaterias((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, horasAcademicas, uv } : item)),
+    );
+  }
+
   function agregarMateria() {
-    setMaterias((prev) => [...prev, { nombre: "", uv: "" }]);
+    setMaterias((prev) => [...prev, { nombre: "", horasAcademicas: "", uv: "" }]);
   }
 
   function eliminarMateria(index) {
@@ -151,6 +184,7 @@ export function ModificarRetiroCicloPage() {
           .filter((m) => m.nombre.trim() !== "")
           .map((m) => ({
             asignatura_nombre: m.nombre.trim(),
+            horas_academicas: m.horasAcademicas !== "" ? Number(m.horasAcademicas) : null,
             uv: m.uv !== "" ? Number(m.uv) : null,
           })),
       };
@@ -174,69 +208,92 @@ export function ModificarRetiroCicloPage() {
       {/* Tabla de selección */}
       <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
         <h2 className="text-base font-semibold text-slate-700">
-          Modificar retiro de ciclo
+          Historial retiro
         </h2>
 
+        <div className="mt-4">
+          <label className="grid gap-1 text-sm sm:max-w-md">
+            <span className="font-medium text-slate-700">Buscar reportes creados</span>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+              <span className="material-symbols-outlined text-slate-400" style={{ fontSize: "1.15rem" }}>
+                search
+              </span>
+              <input
+                type="search"
+                className="w-full bg-transparent text-sm outline-none"
+                placeholder="Buscar por correlativo, alumno, carrera, ciclo, fecha o estado"
+                value={busqueda}
+                onChange={(event) => setBusqueda(event.target.value)}
+              />
+              {busqueda ? (
+                <button
+                  type="button"
+                  onClick={() => setBusqueda("")}
+                  className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Limpiar busqueda"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>
+                    close
+                  </span>
+                </button>
+              ) : null}
+            </div>
+          </label>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white overflow-x-auto">
         {cargandoLista ? (
-          <p className="mt-4 text-sm text-slate-500">Cargando registros...</p>
+          <p className="px-4 py-6 text-sm text-slate-500">Cargando registros...</p>
         ) : lista.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
+          <div className="px-4 py-6">
             <p className="text-sm font-semibold text-blue-800">Sin registros</p>
             <p className="mt-1 text-xs text-blue-700">
               No hay retiros de ciclo creados. Ve a &quot;Crear retiro de
               ciclo&quot; para añadir registros.
             </p>
           </div>
+        ) : listaFiltrada.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-slate-500">No se encontraron retiros de ciclo con esa búsqueda.</p>
         ) : (
-          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-100 text-xs uppercase tracking-wide text-slate-600">
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse text-sm">
+              <thead className="bg-slate-100">
                 <tr>
-                  <th className="px-4 py-2 text-left">Correlativo</th>
-                  <th className="px-4 py-2 text-left">Alumno</th>
-                  <th className="px-4 py-2 text-left">Carrera</th>
-                  <th className="px-4 py-2 text-left">Ciclo</th>
-                  <th className="px-4 py-2 text-left">Fecha</th>
-                  <th className="px-4 py-2 text-left">Estado</th>
-                  <th className="px-4 py-2"></th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Correlativo</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Alumno</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Carrera</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Ciclo</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Fecha</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Estado</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-600">Seleccionar</th>
                 </tr>
               </thead>
               <tbody>
-                {lista.map((r) => (
+                {listaFiltrada.map((r) => (
                   <tr
                     key={r.id}
-                    className={`border-t border-slate-100 ${retiroId === r.id ? "bg-blue-50" : "hover:bg-slate-50"}`}
+                    className={`odd:bg-white even:bg-slate-50 ${retiroId === r.id ? "ring-2 ring-inset ring-blue-400" : ""}`}
                   >
-                    <td className="px-4 py-2 font-mono text-xs text-slate-600">
+                    <td className="border-t border-slate-200 px-4 py-2">
                       {r.correlativo}
                     </td>
-                    <td className="px-4 py-2">{r.alumno_nombre}</td>
-                    <td className="px-4 py-2">{r.carrera_nombre}</td>
-                    <td className="px-4 py-2">{r.ciclo_a_retirar}</td>
-                    <td className="px-4 py-2">
+                    <td className="border-t border-slate-200 px-4 py-2">{r.alumno_nombre}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{r.carrera_nombre}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{r.ciclo_a_retirar}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">
                       {r.fecha ? r.fecha.slice(0, 10) : ""}
                     </td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          r.estado === "EMITIDO"
-                            ? "bg-green-100 text-green-800"
-                            : r.estado === "ANULADO"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {r.estado}
-                      </span>
+                    <td className="border-t border-slate-200 px-4 py-2">
+                      {r.estado}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="border-t border-slate-200 px-4 py-2 text-center">
                       <button
                         type="button"
                         onClick={() => seleccionarRetiro(r.id)}
                         disabled={cargandoFormulario}
-                        className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+                        className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
                       >
-                        Editar
+                        {retiroId === r.id ? "Seleccionado" : "Editar"}
                       </button>
                     </td>
                   </tr>
@@ -245,6 +302,13 @@ export function ModificarRetiroCicloPage() {
             </table>
           </div>
         )}
+        </div>
+
+        {!retiroId && !cargandoFormulario ? (
+          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+            <p className="text-sm font-semibold text-blue-800">Selecciona un retiro de ciclo de la lista para editarlo.</p>
+          </div>
+        ) : null}
       </section>
 
       {/* Formulario de edición */}
@@ -360,20 +424,12 @@ export function ModificarRetiroCicloPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <label className="grid gap-1 text-sm">
-                <span className="font-medium text-slate-700">
-                  Ciclo a retirar
-                </span>
-                <input
-                  type="text"
-                  className="rounded-lg border border-slate-300 px-3 py-2"
-                  value={formulario.cicloRetirar}
-                  onChange={(e) =>
-                    handleInputChange("cicloRetirar", e.target.value)
-                  }
-                  required
-                />
-              </label>
+              <AcademicCycleFields
+                label="Ciclo a retirar"
+                value={formulario.cicloRetirar}
+                onChange={(value) => handleInputChange("cicloRetirar", value)}
+                required
+              />
               <label className="grid gap-1 text-sm">
                 <span className="font-medium text-slate-700">
                   Artículo de referencia
@@ -426,7 +482,7 @@ export function ModificarRetiroCicloPage() {
                 {materias.map((materia, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-[1fr_100px_auto] gap-2 items-center"
+                    className="grid grid-cols-[1fr_190px_auto] gap-2 items-center"
                   >
                     <input
                       type="text"
@@ -437,20 +493,11 @@ export function ModificarRetiroCicloPage() {
                         handleMateriaChange(index, "nombre", e.target.value)
                       }
                     />
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      inputMode="decimal"
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                      placeholder="UV"
-                      value={materia.uv}
-                      onChange={(e) =>
-                        handleMateriaChange(index, "uv", e.target.value)
-                      }
-                      onKeyDown={(e) => {
-                        if (["e", "+", "-"].includes(e.key)) e.preventDefault();
-                      }}
+                    <AcademicUvFields
+                      compact
+                      hours={materia.horasAcademicas}
+                      uv={materia.uv}
+                      onChange={(hours, uv) => handleMateriaUvChange(index, hours, uv)}
                     />
                     <button
                       type="button"
@@ -549,7 +596,7 @@ export function ModificarRetiroCicloPage() {
                 disabled={guardando}
                 className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
               >
-                {guardando ? "Actualizando..." : "Actualizar retiro"}
+                {guardando ? "Guardando..." : "Historial retiro"}
               </button>
             </div>
           </form>

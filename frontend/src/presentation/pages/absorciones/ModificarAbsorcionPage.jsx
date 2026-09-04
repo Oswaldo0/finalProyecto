@@ -1,6 +1,7 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { obtenerAbsorcion, modificarAbsorcion } from "../../../application/absorciones/absorcionesUseCases.js";
+import { listarAbsorciones, obtenerAbsorcion, modificarAbsorcion } from "../../../application/absorciones/absorcionesUseCases.js";
+import { AcademicCycleFields } from "../../components/shared/AcademicCycleFields.jsx";
 import { normalizeByField, toUppercaseText } from "../../utils/formNormalizers.js";
 
 const TABLA_ABSORCION_INICIAL = [
@@ -53,6 +54,9 @@ export function ModificarAbsorcionPage() {
   const [tablaNoExiste, setTablaNoExiste] = useState(TABLA_NO_EXISTE_INICIAL);
   const [tablaReprobadas, setTablaReprobadas] = useState(TABLA_REPROBADAS_INICIAL);
   const [lookupId, setLookupId] = useState(initialId);
+  const [lista, setLista] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [cargandoLista, setCargandoLista] = useState(true);
   const [loadedId, setLoadedId] = useState(initialId ? Number(initialId) : null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +68,34 @@ export function ModificarAbsorcionPage() {
       loadAbsorcion(routeId ?? queryId);
     }
   }, [routeId, queryId]);
+
+  useEffect(() => {
+    listarAbsorciones({ limit: 100 })
+      .then((res) => setLista(res.data ?? []))
+      .catch(() => setLista([]))
+      .finally(() => setCargandoLista(false));
+  }, []);
+
+  const listaFiltrada = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return lista;
+
+    return lista.filter((absorcion) => {
+      const texto = [
+        absorcion.correlativo,
+        absorcion.alumno_nombre,
+        absorcion.carrera_origen,
+        absorcion.plan_solicitado,
+        absorcion.fecha ? String(absorcion.fecha).slice(0, 10) : "",
+        absorcion.estado,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return texto.includes(termino);
+    });
+  }, [busqueda, lista]);
 
   function normalizeAbsorbidas(items) {
     return items.length > 0
@@ -266,7 +298,7 @@ export function ModificarAbsorcionPage() {
         encabezado_dictamen: formulario.encabezadoDictamen.trim(),
         decano_nombre: formulario.decanoNombre.trim(),
         facultad_firma_nombre: formulario.facultadFirma.trim(),
-        estado: "BORRADOR",
+        estado: "CREADO",
       },
       absorbidas: normalizeAbsorbidasForSave(tablaAbsorcion),
       noExistentes: normalizeAsignaturasForSave(tablaNoExiste),
@@ -298,9 +330,9 @@ export function ModificarAbsorcionPage() {
       <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-slate-700">Modificar absorcion</h2>
+            <h2 className="text-base font-semibold text-slate-700">Historial absorción</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Cargue un dictamen existente para editarlo. Puede usar la ruta <code>/absorciones/modificar/&lt;id&gt;</code> o introducir el id aqui.
+              Busque un dictamen existente, seleccione el registro y edite los datos necesarios.
             </p>
           </div>
           <button
@@ -312,37 +344,78 @@ export function ModificarAbsorcionPage() {
           </button>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
-          <p className="text-sm font-semibold text-blue-800">{loadedId ? `Editando absorcion #${loadedId}` : "Cargar absorcion existente"}</p>
-          <p className="mt-1 text-xs text-blue-700">
-            {loadedId
-              ? "Ajuste los campos y guarde para actualizar el documento."
-              : "Ingrese un id valido para cargar los datos del dictamen."}
-          </p>
+        <div className="mt-4">
+          <label className="grid gap-1 text-sm sm:max-w-md">
+            <span className="font-medium text-slate-700">Buscar reportes creados</span>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+              <span className="material-symbols-outlined text-slate-400" style={{ fontSize: "1.15rem" }}>search</span>
+              <input
+                type="search"
+                className="w-full bg-transparent text-sm outline-none"
+                placeholder="Buscar por correlativo, alumno, carrera, plan, fecha o estado"
+                value={busqueda}
+                onChange={(event) => setBusqueda(event.target.value)}
+              />
+              {busqueda ? (
+                <button type="button" onClick={() => setBusqueda("")} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Limpiar busqueda">
+                  <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>close</span>
+                </button>
+              ) : null}
+            </div>
+          </label>
         </div>
 
-        <form className="mt-4 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" onSubmit={handleLookupSubmit}>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">Id de absorcion</span>
-              <input
-                type="text"
-                className="rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="Ej. 1"
-                value={lookupId}
-                onChange={(event) => setLookupId(event.target.value)}
-              />
-            </label>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="inline-flex h-[44px] items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-              >
-                Cargar absorcion
-              </button>
-            </div>
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white overflow-x-auto">
+          {cargandoLista ? (
+            <p className="px-4 py-6 text-sm text-slate-500">Cargando registros...</p>
+          ) : lista.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-slate-500">No hay absorciones registradas aún.</p>
+          ) : listaFiltrada.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-slate-500">No se encontraron absorciones con esa búsqueda.</p>
+          ) : (
+            <table className="min-w-full border-collapse text-sm">
+              <thead className="bg-slate-100">
+                <tr>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Correlativo</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Alumno</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Carrera origen</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Plan solicitado</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Fecha</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Estado</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-600">Seleccionar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listaFiltrada.map((absorcion) => (
+                  <tr key={absorcion.id} className={`odd:bg-white even:bg-slate-50 ${loadedId === absorcion.id ? "ring-2 ring-inset ring-blue-400" : ""}`}>
+                    <td className="border-t border-slate-200 px-4 py-2">{absorcion.correlativo}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{absorcion.alumno_nombre}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{absorcion.carrera_origen}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{absorcion.plan_solicitado}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{absorcion.fecha ? String(absorcion.fecha).slice(0, 10) : ""}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{absorcion.estado}</td>
+                    <td className="border-t border-slate-200 px-4 py-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => loadAbsorcion(absorcion.id)}
+                        disabled={isLoading}
+                        className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                      >
+                        {loadedId === absorcion.id ? "Seleccionado" : "Editar"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {!loadedId && !isLoading ? (
+          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+            <p className="text-sm font-semibold text-blue-800">Selecciona una absorción de la lista para editarla.</p>
           </div>
-        </form>
+        ) : null}
 
         {errorMessage ? (
           <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -358,7 +431,7 @@ export function ModificarAbsorcionPage() {
 
         {isLoading ? (
           <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-700">Cargando absorcion...</div>
-        ) : (
+        ) : loadedId ? (
           <form className="mt-4 grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-label="Formulario modificar absorcion" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <label className="grid gap-1 text-sm">
@@ -372,17 +445,12 @@ export function ModificarAbsorcionPage() {
                   required
                 />
               </label>
-              <label className="grid gap-1 text-sm">
-                <span className="font-medium text-slate-700">Ciclo</span>
-                <input
-                  type="text"
-                  className="rounded-lg border border-slate-300 px-3 py-2"
-                  placeholder="Ej. I-2026"
-                  value={formulario.ciclo}
-                  onChange={(event) => handleInputChange("ciclo", event.target.value)}
-                  required
-                />
-              </label>
+              <AcademicCycleFields
+                value={formulario.ciclo}
+                onChange={(value) => handleInputChange("ciclo", value)}
+                required
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:col-span-1"
+              />
               <label className="grid gap-1 text-sm">
                 <span className="font-medium text-slate-700">Fecha</span>
                 <input
@@ -687,11 +755,11 @@ export function ModificarAbsorcionPage() {
                 disabled={isSubmitting}
                 className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
               >
-                {isSubmitting ? "Guardando..." : "Actualizar absorcion"}
+                {isSubmitting ? "Guardando..." : "Historial absorción"}
               </button>
             </div>
           </form>
-        )}
+        ) : null}
       </section>
 
       {showCancelNotice ? (

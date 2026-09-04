@@ -47,6 +47,14 @@ export function AppHeader({ user, onLogout }) {
                   aria-hidden="true"
                   className={`h-12 w-12 object-contain ${item.iconClassName ?? ""}`}
                 />
+              ) : item.iconName ? (
+                <span
+                  className={`material-symbols-outlined flex h-12 w-12 items-center justify-center text-slate-600 ${item.iconClassName ?? ""}`}
+                  style={{ fontSize: "2.25rem" }}
+                  aria-hidden="true"
+                >
+                  {item.iconName}
+                </span>
               ) : null}
               <span className="leading-tight">{item.label}</span>
             </NavLink>

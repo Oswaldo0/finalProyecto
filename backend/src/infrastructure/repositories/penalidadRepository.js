@@ -1,4 +1,5 @@
 import pool from "../database/mysqlPool.js";
+import { dateOnly } from "./dateOnly.js";
 
 function buildPenalidadCorrelativo(fecha, id) {
   if (!fecha || !id) return null;
@@ -33,7 +34,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
     params
   );
 
-  return { data: rows, total, page, limit };
+  return { data: rows.map(mapPenalidad), total, page, limit };
 }
 
 export async function findById(id) {
@@ -61,7 +62,7 @@ export async function findById(id) {
     [id]
   );
 
-  return { ...penalidad, asignaturas };
+  return { ...mapPenalidad(penalidad), asignaturas };
 }
 
 export async function create({ penalidad, asignaturas = [] }) {
@@ -81,7 +82,7 @@ export async function create({ penalidad, asignaturas = [] }) {
         penalidad.usuario_id ?? null,
         penalidad.secretario_nombre,
         penalidad.decano_nombre,
-        penalidad.fecha,
+        dateOnly(penalidad.fecha),
         penalidad.cantidad_anios_egreso,
         penalidad.ciclo_reingreso,
         penalidad.alumno_nombre,
@@ -89,12 +90,12 @@ export async function create({ penalidad, asignaturas = [] }) {
         penalidad.mes_egreso,
         penalidad.anio_egreso,
         penalidad.anios_egresado,
-        penalidad.estado ?? "BORRADOR",
+        penalidad.estado ?? "CREADO",
       ]
     );
 
     const penalidadId = result.insertId;
-    const correlativo = buildPenalidadCorrelativo(penalidad.fecha, penalidadId);
+    const correlativo = buildPenalidadCorrelativo(dateOnly(penalidad.fecha), penalidadId);
 
     if (correlativo) {
       await conn.query(
@@ -142,7 +143,7 @@ export async function update(id, { penalidad, asignaturas }) {
       [
         penalidad.secretario_nombre,
         penalidad.decano_nombre,
-        penalidad.fecha,
+        dateOnly(penalidad.fecha),
         penalidad.cantidad_anios_egreso,
         penalidad.ciclo_reingreso,
         penalidad.alumno_nombre,
@@ -150,14 +151,14 @@ export async function update(id, { penalidad, asignaturas }) {
         penalidad.mes_egreso,
         penalidad.anio_egreso,
         penalidad.anios_egresado,
-        penalidad.estado ?? "BORRADOR",
+        penalidad.estado ?? "CREADO",
         penalidad.estudiante_id ?? null,
         penalidad.carrera_id ?? null,
         id,
       ]
     );
 
-    const correlativo = buildPenalidadCorrelativo(penalidad.fecha, id);
+    const correlativo = buildPenalidadCorrelativo(dateOnly(penalidad.fecha), id);
     if (correlativo) {
       await conn.query(`UPDATE penalidades SET correlativo = ? WHERE id = ?`, [correlativo, id]);
     }
@@ -198,4 +199,20 @@ export async function remove(id) {
     [id]
   );
   return result.affectedRows > 0;
+}
+
+export async function markAsPrinted(id) {
+  await pool.query(
+    `UPDATE penalidades
+     SET estado = 'IMPRESO'
+     WHERE id = ? AND estado = 'CREADO'`,
+    [id],
+  );
+
+  return findById(id);
+}
+
+function mapPenalidad(row) {
+  if (!row) return null;
+  return { ...row, fecha: dateOnly(row.fecha) };
 }

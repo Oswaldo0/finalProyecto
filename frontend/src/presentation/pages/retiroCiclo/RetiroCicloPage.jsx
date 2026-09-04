@@ -8,7 +8,7 @@ const accionesRetiro = [
     buttonClassName: "bg-[#008B8B] text-white hover:bg-[#006f6f]",
   },
   {
-    label: "Modificar retiro",
+    label: "Historial retiro",
     route: "/retiro-ciclo/modificar",
     icon: "cached",
     buttonClassName: "bg-[#008B8B] text-white hover:bg-[#006f6f]",

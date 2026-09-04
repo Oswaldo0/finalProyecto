@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   CATALOGOS_INICIALES,
+  listarAnotaciones,
   modificarAnotacion,
   obtenerAnotacion,
   obtenerCatalogosAnotaciones,
 } from "../../../application/anotaciones/anotacionesUseCases.js";
+import { AcademicCycleFields } from "../../components/shared/AcademicCycleFields.jsx";
 import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const FORMULARIO_INICIAL = {
@@ -20,7 +22,7 @@ const FORMULARIO_INICIAL = {
   aula: "",
   ciclo: "",
   observaciones: "",
-  estado: "BORRADOR",
+  estado: "CREADO",
 };
 
 export function ModificarAnotacionPage() {
@@ -28,6 +30,9 @@ export function ModificarAnotacionPage() {
   const { id: routeId } = useParams();
   const [catalogos, setCatalogos] = useState(CATALOGOS_INICIALES);
   const [lookupId, setLookupId] = useState(routeId ?? "");
+  const [lista, setLista] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [cargandoLista, setCargandoLista] = useState(true);
   const [loadedId, setLoadedId] = useState(null);
   const [formulario, setFormulario] = useState(FORMULARIO_INICIAL);
   const [cargando, setCargando] = useState(false);
@@ -49,6 +54,35 @@ export function ModificarAnotacionPage() {
   useEffect(() => {
     if (routeId) cargarAnotacion(routeId);
   }, [routeId]);
+
+  useEffect(() => {
+    listarAnotaciones()
+      .then(setLista)
+      .catch(() => setLista([]))
+      .finally(() => setCargandoLista(false));
+  }, []);
+
+  const listaFiltrada = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return lista;
+
+    return lista.filter((anotacion) => {
+      const texto = [
+        anotacion.correlativo,
+        anotacion.observador,
+        anotacion.fecha,
+        anotacion.asignaturaGrupo,
+        anotacion.facultad,
+        anotacion.horario,
+        anotacion.estado,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return texto.includes(termino);
+    });
+  }, [busqueda, lista]);
 
   async function cargarAnotacion(id) {
     if (!id) return;
@@ -72,7 +106,7 @@ export function ModificarAnotacionPage() {
         aula: anotacion.aula ?? "",
         ciclo: anotacion.ciclo ?? "",
         observaciones: anotacion.observaciones ?? "",
-        estado: anotacion.estado ?? "BORRADOR",
+        estado: anotacion.estado ?? "CREADO",
       });
     } catch (err) {
       setLoadedId(null);
@@ -127,31 +161,89 @@ export function ModificarAnotacionPage() {
       <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
           <h2 className="text-xl font-semibold uppercase tracking-wide text-slate-800">
-            Modificar observación de clases
+            Historial anotación
           </h2>
           <p className="mt-2 text-sm text-slate-600">
             Busque una observación registrada y actualice los datos académicos correspondientes.
           </p>
         </div>
 
-        <form className="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-end" onSubmit={handleBuscar}>
-          <Input label="ID de anotación" value={lookupId} onChange={setLookupId} />
-          <button type="submit" disabled={cargando} className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60">
-            {cargando ? "Buscando..." : "Buscar"}
-          </button>
-        </form>
+        <div className="mt-4">
+          <label className="grid gap-1 text-sm sm:max-w-md">
+            <span className="font-medium text-slate-700">Buscar reportes creados</span>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+              <span className="material-symbols-outlined text-slate-400" style={{ fontSize: "1.15rem" }}>search</span>
+              <input
+                type="search"
+                className="w-full bg-transparent text-sm outline-none"
+                placeholder="Buscar por correlativo, observador, asignatura, facultad, fecha o estado"
+                value={busqueda}
+                onChange={(event) => setBusqueda(event.target.value)}
+              />
+              {busqueda ? (
+                <button type="button" onClick={() => setBusqueda("")} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Limpiar busqueda">
+                  <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>close</span>
+                </button>
+              ) : null}
+            </div>
+          </label>
+        </div>
 
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white overflow-x-auto">
+          {cargandoLista ? (
+            <p className="px-4 py-6 text-sm text-slate-500">Cargando registros...</p>
+          ) : lista.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-slate-500">No hay anotaciones registradas aún.</p>
+          ) : listaFiltrada.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-slate-500">No se encontraron anotaciones con esa búsqueda.</p>
+          ) : (
+            <table className="min-w-full border-collapse text-sm">
+              <thead className="bg-slate-100">
+                <tr>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Correlativo</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Fecha</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Observador</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Asignatura/grupo</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Estado</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-600">Seleccionar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listaFiltrada.map((anotacion) => (
+                  <tr key={anotacion.id} className={`odd:bg-white even:bg-slate-50 ${loadedId === anotacion.id ? "ring-2 ring-inset ring-blue-400" : ""}`}>
+                    <td className="border-t border-slate-200 px-4 py-2">{anotacion.correlativo}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{anotacion.fecha}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{anotacion.observador}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{anotacion.asignaturaGrupo}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{anotacion.estado}</td>
+                    <td className="border-t border-slate-200 px-4 py-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => cargarAnotacion(anotacion.id)}
+                        disabled={cargando}
+                        className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                      >
+                        {loadedId === anotacion.id ? "Seleccionado" : "Editar"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {!loadedId && !cargando ? (
+          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+            <p className="text-sm font-semibold text-blue-800">Selecciona una anotación de la lista para editarla.</p>
+          </div>
+        ) : null}
+
+        {loadedId && !cargando ? (
         <form className="mt-4 grid gap-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-label="Formulario modificar observación de clases" onSubmit={handleSubmit}>
           {showCancelNotice ? <Toast title="Se ha cancelado esta acción" detail="Redirigiendo a Anotaciones..." tone="warning" /> : null}
           {mensajeExito ? <Toast title={mensajeExito} detail="Los cambios fueron guardados." tone="success" /> : null}
           {mensajeError ? <Toast title="No se pudo completar la acción" detail={mensajeError} tone="error" /> : null}
-          {!loadedId ? (
-            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-              <p className="text-sm font-semibold text-blue-800">Seleccione un registro</p>
-              <p className="mt-1 text-xs text-blue-700">Ingrese el ID de una anotación para cargarla antes de modificar.</p>
-            </div>
-          ) : null}
-
           <FormSection title="Datos generales">
             <RadioGroup
               number="1"
@@ -185,7 +277,11 @@ export function ModificarAnotacionPage() {
               <Select label="Horario" required value={formulario.horario} options={catalogos.horarios} onChange={(value) => handleInputChange("horario", value)} />
               <Input label="Docente observado" required value={formulario.docente} onChange={(value) => handleInputChange("docente", value)} />
               <Input label="Aula" required value={formulario.aula} onChange={(value) => handleInputChange("aula", value)} />
-              <Input label="Ciclo académico" required value={formulario.ciclo} onChange={(value) => handleInputChange("ciclo", value)} />
+              <AcademicCycleFields
+                value={formulario.ciclo}
+                onChange={(value) => handleInputChange("ciclo", value)}
+                required
+              />
             </div>
 
             <label className="grid gap-1 text-sm">
@@ -204,7 +300,7 @@ export function ModificarAnotacionPage() {
             <Select
               label="Estado del documento"
               value={formulario.estado}
-              options={["BORRADOR", "EMITIDA", "ANULADA"]}
+              options={["CREADO", "EMITIDA", "IMPRESO", "ANULADA"]}
               onChange={(value) => handleInputChange("estado", value)}
             />
           </FormSection>
@@ -214,10 +310,11 @@ export function ModificarAnotacionPage() {
               Cancelar
             </button>
             <button type="submit" disabled={!loadedId || guardando} className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60">
-              {guardando ? "Actualizando..." : "Actualizar observación"}
+              {guardando ? "Guardando..." : "Historial anotación"}
             </button>
           </div>
         </form>
+        ) : null}
       </section>
     </main>
   );

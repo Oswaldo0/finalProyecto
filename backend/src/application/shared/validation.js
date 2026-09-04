@@ -62,3 +62,28 @@ export function assertValidDate(value, field, { required = false } = {}) {
     throw validationError(`El campo '${field}' debe contener una fecha válida.`);
   }
 }
+
+export function assertAcademicCycle(value, field) {
+  const text = String(value ?? "").trim().toUpperCase();
+  if (!/^(I|II|INTERCICLO)-\d{4}$/.test(text)) {
+    throw validationError(`El campo '${field}' debe tener formato I-2026, II-2026 o INTERCICLO-2026.`);
+  }
+}
+
+export function calculateAcademicUv(hours) {
+  if (hours === undefined || hours === null || hours === "") return null;
+  const numericHours = Number(hours);
+  if (!Number.isFinite(numericHours) || numericHours < 0) {
+    throw validationError("Las horas academicas deben ser un numero mayor o igual a 0.");
+  }
+
+  return Number((numericHours / 20).toFixed(2));
+}
+
+export function normalizeAcademicUv(source = {}) {
+  if (source.horas_academicas !== undefined && source.horas_academicas !== null && source.horas_academicas !== "") {
+    return calculateAcademicUv(source.horas_academicas);
+  }
+
+  return source.uv ?? null;
+}

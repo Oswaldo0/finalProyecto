@@ -8,7 +8,7 @@ const accionesAbsorciones = [
     buttonClassName: "bg-[#228B22] text-white hover:bg-[#1b6f1b]",
   },
   {
-    label: "Modificar absorción",
+    label: "Historial absorción",
     route: "/absorciones/modificar",
     icon: "cached",
     buttonClassName: "bg-[#228B22] text-white hover:bg-[#1b6f1b]",

@@ -8,7 +8,7 @@ const accionesPenalidad = [
     buttonClassName: "bg-[#AD0209] text-white hover:bg-[#8f0107]",
   },
   {
-    label: "Actualizar",
+    label: "Historial penalidad",
     route: "/penalidad/modificar",
     icon: "cached",
     buttonClassName: "bg-[#AD0209] text-white hover:bg-[#8f0107]",

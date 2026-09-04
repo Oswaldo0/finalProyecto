@@ -3,6 +3,7 @@ import {
   obtenerAbsorcion,
   crearAbsorcion as apiCrear,
   actualizarAbsorcion as apiActualizar,
+  marcarAbsorcionImpresa as apiMarcarImpresa,
   eliminarAbsorcion as apiEliminar,
   urlPdfAbsorcion,
 } from "../../infrastructure/api/absorcionApi.js";
@@ -15,6 +16,10 @@ export function crearAbsorcion(payload) {
 
 export function modificarAbsorcion(id, payload) {
   return apiActualizar(id, payload);
+}
+
+export function marcarAbsorcionImpresa(id) {
+  return apiMarcarImpresa(id);
 }
 
 export function eliminarAbsorcion(id) {

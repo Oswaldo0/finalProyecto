@@ -3,12 +3,13 @@ import {
   assertAllowedValue,
   assertNonNegativeDecimal,
   assertValidDate,
+  normalizeAcademicUv,
   requireFields,
   requireNonEmptyArray,
   requireObject,
 } from "../shared/validation.js";
 
-const ESTADOS_EQUIVALENCIA = ["BORRADOR", "REVISION", "APROBADA", "DENEGADA"];
+const ESTADOS_EQUIVALENCIA = ["CREADO", "REVISION", "IMPRESO", "APROBADA", "DENEGADA"];
 const RESULTADOS_DETALLE = ["PENDIENTE", "APROBADA", "DENEGADA"];
 
 export async function listar(filtros) {
@@ -27,17 +28,24 @@ export async function obtener(id) {
 
 export async function crear(body) {
   const { equivalencia, detalles } = body;
+  const detallesNormalizados = normalizarDetalles(detalles);
   validarEquivalencia(equivalencia);
-  validarDetalles(detalles);
-  return repo.create({ equivalencia, detalles });
+  validarDetalles(detallesNormalizados);
+  return repo.create({ equivalencia, detalles: detallesNormalizados });
 }
 
 export async function actualizar(id, body) {
   await obtener(id);
   const { equivalencia, detalles } = body;
+  const detallesNormalizados = detalles !== undefined ? normalizarDetalles(detalles) : undefined;
   validarEquivalencia(equivalencia);
-  if (detalles !== undefined) validarDetalles(detalles);
-  return repo.update(id, { equivalencia, detalles });
+  if (detallesNormalizados !== undefined) validarDetalles(detallesNormalizados);
+  return repo.update(id, { equivalencia, detalles: detallesNormalizados });
+}
+
+export async function marcarImpresa(id) {
+  await obtener(id);
+  return repo.markAsPrinted(id);
 }
 
 export async function eliminar(id) {
@@ -50,7 +58,7 @@ function validarEquivalencia(equivalencia = {}) {
   requireFields(equivalencia, ["alumno_nombre", "texto_solicitud"]);
   assertValidDate(equivalencia.fecha_solicitud, "fecha_solicitud");
   assertValidDate(equivalencia.fecha_decano, "fecha_decano");
-  assertAllowedValue(equivalencia.estado ?? "BORRADOR", ESTADOS_EQUIVALENCIA, "estado");
+  assertAllowedValue(equivalencia.estado ?? "CREADO", ESTADOS_EQUIVALENCIA, "estado");
 }
 
 function validarDetalles(detalles = []) {
@@ -67,4 +75,11 @@ function validarDetalles(detalles = []) {
       `detalles[${index}].resultado`,
     );
   });
+}
+
+function normalizarDetalles(detalles = []) {
+  return detalles.map((detalle) => ({
+    ...detalle,
+    uv: normalizeAcademicUv(detalle),
+  }));
 }

@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   listarPenalidades,
   obtenerPenalidad,
   modificarPenalidad,
 } from "../../../application/penalidad/penalidadUseCases.js";
+import { AcademicCycleFields } from "../../components/shared/AcademicCycleFields.jsx";
+import { AcademicUvFields, hoursFromUv } from "../../components/shared/AcademicUvFields.jsx";
 import { normalizeByField } from "../../utils/formNormalizers.js";
 
 const ANIO_ACTUAL = new Date().getFullYear();
@@ -47,10 +49,11 @@ export function ModificarPenalidadPage() {
   const [showCancelNotice, setShowCancelNotice] = useState(false);
   const [formulario, setFormulario] = useState(FORMULARIO_INICIAL);
   const [errores, setErrores] = useState({});
-  const [asignaturas, setAsignaturas] = useState([{ nombre: "", uv: "" }]);
+  const [asignaturas, setAsignaturas] = useState([{ nombre: "", horasAcademicas: "", uv: "" }]);
 
   // Lista de penalidades para seleccionar
   const [lista, setLista] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
   const [cargandoLista, setCargandoLista] = useState(true);
   const [penalidadId, setPenalidadId] = useState(null);
   const [cargandoFormulario, setCargandoFormulario] = useState(false);
@@ -65,6 +68,26 @@ export function ModificarPenalidadPage() {
       .catch(() => setLista([]))
       .finally(() => setCargandoLista(false));
   }, []);
+
+  const listaFiltrada = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return lista;
+
+    return lista.filter((penalidad) => {
+      const texto = [
+        penalidad.correlativo,
+        penalidad.alumno_nombre,
+        penalidad.carrera_nombre,
+        penalidad.fecha ? penalidad.fecha.slice(0, 10) : "",
+        penalidad.estado,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return texto.includes(termino);
+    });
+  }, [busqueda, lista]);
 
   async function seleccionarPenalidad(id) {
     setCargandoFormulario(true);
@@ -99,8 +122,12 @@ export function ModificarPenalidadPage() {
 
       setAsignaturas(
         pen.asignaturas?.length > 0
-          ? pen.asignaturas.map((a) => ({ nombre: a.asignatura_nombre, uv: a.uv != null ? String(a.uv) : "" }))
-          : [{ nombre: "", uv: "" }]
+          ? pen.asignaturas.map((a) => ({
+              nombre: a.asignatura_nombre,
+              horasAcademicas: hoursFromUv(a.uv),
+              uv: a.uv != null ? String(a.uv) : "",
+            }))
+          : [{ nombre: "", horasAcademicas: "", uv: "" }]
       );
       setErrores({});
       setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
@@ -121,7 +148,7 @@ export function ModificarPenalidadPage() {
   }
 
   function agregarAsignatura() {
-    setAsignaturas((prev) => [...prev, { nombre: "", uv: "" }]);
+    setAsignaturas((prev) => [...prev, { nombre: "", horasAcademicas: "", uv: "" }]);
   }
 
   function eliminarAsignatura(index) {
@@ -133,6 +160,14 @@ export function ModificarPenalidadPage() {
     setAsignaturas((prev) =>
       prev.map((item, itemIndex) =>
         itemIndex === index ? { ...item, [field]: finalValue } : item,
+      ),
+    );
+  }
+
+  function handleAsignaturaUvChange(index, horasAcademicas, uv) {
+    setAsignaturas((prev) =>
+      prev.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, horasAcademicas, uv } : item,
       ),
     );
   }
@@ -172,6 +207,7 @@ export function ModificarPenalidadPage() {
           .filter((a) => a.nombre.trim() !== "")
           .map((a) => ({
             asignatura_nombre: a.nombre.trim(),
+            horas_academicas: a.horasAcademicas !== "" ? Number(a.horasAcademicas) : null,
             uv: a.uv !== "" ? Number(a.uv) : null,
           })),
       };
@@ -184,7 +220,7 @@ export function ModificarPenalidadPage() {
         setMensajeExito("");
         setPenalidadId(null);
         setFormulario(FORMULARIO_INICIAL);
-        setAsignaturas([{ nombre: "", uv: "" }]);
+        setAsignaturas([{ nombre: "", horasAcademicas: "", uv: "" }]);
       }, 2000);
     } catch (err) {
       setMensajeError(err.message || "Error al actualizar la penalidad.");
@@ -201,8 +237,38 @@ export function ModificarPenalidadPage() {
     <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
       <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
         <h2 className="text-base font-semibold text-slate-700">
-          Modificar penalidad
+          Historial penalidad
         </h2>
+
+        <div className="mt-4">
+          <label className="grid gap-1 text-sm sm:max-w-md">
+            <span className="font-medium text-slate-700">Buscar reportes creados</span>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+              <span className="material-symbols-outlined text-slate-400" style={{ fontSize: "1.15rem" }}>
+                search
+              </span>
+              <input
+                type="search"
+                className="w-full bg-transparent text-sm outline-none"
+                placeholder="Buscar por correlativo, alumno, carrera, fecha o estado"
+                value={busqueda}
+                onChange={(event) => setBusqueda(event.target.value)}
+              />
+              {busqueda ? (
+                <button
+                  type="button"
+                  onClick={() => setBusqueda("")}
+                  className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Limpiar busqueda"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>
+                    close
+                  </span>
+                </button>
+              ) : null}
+            </div>
+          </label>
+        </div>
 
         {/* Lista de penalidades para seleccionar */}
         <div className="mt-4 rounded-2xl border border-slate-200 bg-white overflow-x-auto">
@@ -210,6 +276,8 @@ export function ModificarPenalidadPage() {
             <p className="px-4 py-6 text-sm text-slate-500">Cargando registros...</p>
           ) : lista.length === 0 ? (
             <p className="px-4 py-6 text-sm text-slate-500">No hay penalidades registradas aún.</p>
+          ) : listaFiltrada.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-slate-500">No se encontraron penalidades con esa búsqueda.</p>
           ) : (
             <table className="min-w-full border-collapse text-sm">
               <thead className="bg-slate-100">
@@ -222,7 +290,7 @@ export function ModificarPenalidadPage() {
                 </tr>
               </thead>
               <tbody>
-                {lista.map((p) => (
+                {listaFiltrada.map((p) => (
                   <tr
                     key={p.id}
                     className={`odd:bg-white even:bg-slate-50 ${penalidadId === p.id ? "ring-2 ring-inset ring-blue-400" : ""}`}
@@ -350,17 +418,13 @@ export function ModificarPenalidadPage() {
                 <span className="text-xs text-red-600">{errores.cantidadAniosEgreso}</span>
               )}
             </label>
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">Ciclo de reingreso</span>
-              <input
-                type="text"
-                className="rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="Ej. I-2026"
-                value={formulario.cicloReingreso}
-                onChange={(e) => handleInputChange("cicloReingreso", e.target.value)}
-                required
-              />
-            </label>
+            <AcademicCycleFields
+              label="Ciclo de reingreso"
+              value={formulario.cicloReingreso}
+              onChange={(value) => handleInputChange("cicloReingreso", value)}
+              required
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:col-span-1"
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -460,7 +524,7 @@ export function ModificarPenalidadPage() {
             </div>
             <div className="mt-3 grid gap-2">
               {asignaturas.map((asignatura, index) => (
-                <div key={index} className="grid grid-cols-[1fr_100px_auto] gap-2 items-center">
+                <div key={index} className="grid grid-cols-[1fr_190px_auto] gap-2 items-center">
                   <input
                     type="text"
                     className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -468,18 +532,11 @@ export function ModificarPenalidadPage() {
                     value={asignatura.nombre}
                     onChange={(e) => handleAsignaturaChange(index, "nombre", e.target.value)}
                   />
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    placeholder="UV"
-                    value={asignatura.uv}
-                    onChange={(e) => handleAsignaturaChange(index, "uv", e.target.value)}
-                    onKeyDown={(e) => {
-                      if (["e", "+", "-"].includes(e.key)) e.preventDefault();
-                    }}
+                  <AcademicUvFields
+                    compact
+                    hours={asignatura.horasAcademicas}
+                    uv={asignatura.uv}
+                    onChange={(hours, uv) => handleAsignaturaUvChange(index, hours, uv)}
                   />
                   <button
                     type="button"
@@ -508,7 +565,7 @@ export function ModificarPenalidadPage() {
               disabled={guardando}
               className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60"
             >
-              {guardando ? "Guardando..." : "Actualizar penalidad"}
+              {guardando ? "Guardando..." : "Historial penalidad"}
             </button>
           </div>
         </form>

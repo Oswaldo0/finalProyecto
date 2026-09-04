@@ -8,7 +8,7 @@ const accionesAnotaciones = [
     buttonClassName: "bg-[#FFA500] text-white hover:bg-[#cc8400]",
   },
   {
-    label: "Modificar anotación",
+    label: "Historial anotación",
     route: "/anotaciones/modificar",
     icon: "cached",
     buttonClassName: "bg-[#FFA500] text-white hover:bg-[#cc8400]",

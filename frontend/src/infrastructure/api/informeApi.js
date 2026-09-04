@@ -1,4 +1,4 @@
-import { requestJson } from "./httpClient.js";
+import { buildApiUrl, requestJson } from "./httpClient.js";
 
 const BASE = "/api/informes";
 
@@ -24,7 +24,7 @@ export async function descargarReporteInformesPdf(filtros = {}) {
   const headers = new Headers();
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const response = await fetch(`${BASE}/pdf?${params}`, { headers });
+  const response = await fetch(buildApiUrl(`${BASE}/pdf?${params}`), { headers });
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new Error(data.message || "No se pudo generar el reporte PDF.");

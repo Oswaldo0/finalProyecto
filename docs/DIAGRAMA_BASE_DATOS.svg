@@ -1,0 +1,297 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1320" viewBox="0 0 1800 1320">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155" />
+    </marker>
+    <marker id="arrowDash" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#7c3aed" />
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 16px Arial, sans-serif; fill: #475569; }
+      .group-title { font: 700 16px Arial, sans-serif; fill: #334155; letter-spacing: .4px; }
+      .table { stroke: #334155; stroke-width: 1.5; rx: 12; ry: 12; }
+      .base { fill: #e0f2fe; }
+      .security { fill: #ede9fe; }
+      .document { fill: #dcfce7; }
+      .detail { fill: #fef3c7; }
+      .report { fill: #ffe4e6; }
+      .catalog { fill: #e2e8f0; }
+      .table-name { font: 700 15px Arial, sans-serif; fill: #0f172a; }
+      .field { font: 400 12px Arial, sans-serif; fill: #334155; }
+      .pk { font: 700 12px Arial, sans-serif; fill: #0f172a; }
+      .fk { font: 700 12px Arial, sans-serif; fill: #b91c1c; }
+      .line { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 8 7; fill: none; marker-end: url(#arrowDash); }
+      .note { font: 400 13px Arial, sans-serif; fill: #475569; }
+      .label { font: 700 11px Arial, sans-serif; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1800" height="1320" />
+  <text class="title" x="60" y="58">Diagrama de base de datos - Sistema Académico USO</text>
+  <text class="subtitle" x="60" y="88">Relaciones principales según llaves foráneas y tablas de resumen de informes.</text>
+
+  <text class="group-title" x="70" y="130">CATÁLOGOS Y ESTRUCTURA ACADÉMICA</text>
+  <text class="group-title" x="640" y="130">SEGURIDAD Y AUDITORÍA</text>
+  <text class="group-title" x="70" y="455">DOCUMENTOS ACADÉMICOS</text>
+  <text class="group-title" x="1040" y="455">DETALLES DE DOCUMENTOS</text>
+  <text class="group-title" x="640" y="1015">REPORTES</text>
+
+  <!-- Base académica -->
+  <g id="facultades">
+    <rect class="table base" x="70" y="150" width="230" height="105" />
+    <text class="table-name" x="88" y="177">facultades</text>
+    <text class="pk" x="88" y="200">PK id</text>
+    <text class="field" x="88" y="220">nombre, codigo</text>
+    <text class="field" x="88" y="240">estado</text>
+  </g>
+
+  <g id="carreras">
+    <rect class="table base" x="360" y="150" width="245" height="120" />
+    <text class="table-name" x="378" y="177">carreras</text>
+    <text class="pk" x="378" y="200">PK id</text>
+    <text class="fk" x="378" y="220">FK facultad_id</text>
+    <text class="field" x="378" y="240">nombre, codigo, estado</text>
+  </g>
+
+  <g id="planes">
+    <rect class="table base" x="70" y="295" width="230" height="115" />
+    <text class="table-name" x="88" y="322">planes_estudio</text>
+    <text class="pk" x="88" y="345">PK id</text>
+    <text class="fk" x="88" y="365">FK carrera_id</text>
+    <text class="field" x="88" y="385">nombre, anio, estado</text>
+  </g>
+
+  <g id="estudiantes">
+    <rect class="table base" x="360" y="300" width="245" height="125" />
+    <text class="table-name" x="378" y="327">estudiantes</text>
+    <text class="pk" x="378" y="350">PK id</text>
+    <text class="fk" x="378" y="370">FK carrera_actual_id</text>
+    <text class="fk" x="378" y="390">FK plan_estudio_id</text>
+    <text class="field" x="378" y="410">expediente, carnet, nombres</text>
+  </g>
+
+  <g id="decanos">
+    <rect class="table catalog" x="70" y="1130" width="230" height="95" />
+    <text class="table-name" x="88" y="1157">decanos</text>
+    <text class="pk" x="88" y="1180">PK id</text>
+    <text class="fk" x="88" y="1200">FK facultad_id</text>
+  </g>
+
+  <g id="secretarios">
+    <rect class="table catalog" x="360" y="1130" width="245" height="95" />
+    <text class="table-name" x="378" y="1157">secretarios</text>
+    <text class="pk" x="378" y="1180">PK id</text>
+    <text class="fk" x="378" y="1200">FK facultad_id</text>
+  </g>
+
+  <!-- Seguridad -->
+  <g id="usuarios">
+    <rect class="table security" x="650" y="150" width="250" height="125" />
+    <text class="table-name" x="668" y="177">usuarios</text>
+    <text class="pk" x="668" y="200">PK id</text>
+    <text class="fk" x="668" y="220">FK estudiante_id</text>
+    <text class="field" x="668" y="240">username, email, rol</text>
+    <text class="field" x="668" y="260">estado, ultimo_login</text>
+  </g>
+
+  <g id="auditoria">
+    <rect class="table security" x="965" y="150" width="260" height="120" />
+    <text class="table-name" x="983" y="177">auditoria_eventos</text>
+    <text class="pk" x="983" y="200">PK id</text>
+    <text class="fk" x="983" y="220">FK usuario_id</text>
+    <text class="field" x="983" y="240">accion, entidad, ruta, ip</text>
+  </g>
+
+  <!-- Documentos -->
+  <g id="penalidades">
+    <rect class="table document" x="70" y="480" width="260" height="135" />
+    <text class="table-name" x="88" y="507">penalidades</text>
+    <text class="pk" x="88" y="530">PK id</text>
+    <text class="fk" x="88" y="550">FK estudiante_id, carrera_id</text>
+    <text class="fk" x="88" y="570">FK usuario_id</text>
+    <text class="field" x="88" y="590">correlativo, fecha, ciclo</text>
+  </g>
+
+  <g id="retiros">
+    <rect class="table document" x="380" y="480" width="270" height="135" />
+    <text class="table-name" x="398" y="507">retiros_ciclo</text>
+    <text class="pk" x="398" y="530">PK id</text>
+    <text class="fk" x="398" y="550">FK estudiante_id, carrera_id</text>
+    <text class="fk" x="398" y="570">FK usuario_id</text>
+    <text class="field" x="398" y="590">correlativo, fecha, ciclo</text>
+  </g>
+
+  <g id="equivalencias">
+    <rect class="table document" x="700" y="480" width="270" height="135" />
+    <text class="table-name" x="718" y="507">equivalencias</text>
+    <text class="pk" x="718" y="530">PK id</text>
+    <text class="fk" x="718" y="550">FK estudiante_id</text>
+    <text class="fk" x="718" y="570">FK usuario_id</text>
+    <text class="field" x="718" y="590">correlativo, solicitud</text>
+  </g>
+
+  <g id="absorciones">
+    <rect class="table document" x="70" y="680" width="260" height="140" />
+    <text class="table-name" x="88" y="707">absorciones</text>
+    <text class="pk" x="88" y="730">PK id</text>
+    <text class="fk" x="88" y="750">FK estudiante_id</text>
+    <text class="fk" x="88" y="770">FK facultad_id, usuario_id</text>
+    <text class="field" x="88" y="790">correlativo, ciclo, fecha</text>
+  </g>
+
+  <g id="consultas">
+    <rect class="table document" x="380" y="680" width="270" height="140" />
+    <text class="table-name" x="398" y="707">consultas_estudiantes</text>
+    <text class="pk" x="398" y="730">PK id</text>
+    <text class="fk" x="398" y="750">FK usuario_id, estudiante_id</text>
+    <text class="fk" x="398" y="770">FK carrera_id</text>
+    <text class="field" x="398" y="790">tipo, materia, consulta</text>
+  </g>
+
+  <g id="anotaciones">
+    <rect class="table document" x="700" y="680" width="270" height="140" />
+    <text class="table-name" x="718" y="707">anotaciones</text>
+    <text class="pk" x="718" y="730">PK id</text>
+    <text class="fk" x="718" y="750">FK usuario_id</text>
+    <text class="field" x="718" y="770">observador, docente</text>
+    <text class="field" x="718" y="790">asignatura, facultad, ciclo</text>
+  </g>
+
+  <g id="catalogos">
+    <rect class="table catalog" x="700" y="860" width="270" height="95" />
+    <text class="table-name" x="718" y="887">anotaciones_catalogos</text>
+    <text class="pk" x="718" y="910">PK id</text>
+    <text class="field" x="718" y="930">tipo, valor, estado</text>
+  </g>
+
+  <!-- Detalles -->
+  <g id="penalidad_asignaturas">
+    <rect class="table detail" x="1060" y="480" width="300" height="115" />
+    <text class="table-name" x="1078" y="507">penalidad_asignaturas</text>
+    <text class="pk" x="1078" y="530">PK id</text>
+    <text class="fk" x="1078" y="550">FK penalidad_id</text>
+    <text class="field" x="1078" y="570">orden, asignatura, uv</text>
+  </g>
+
+  <g id="retiro_asignaturas">
+    <rect class="table detail" x="1430" y="480" width="300" height="115" />
+    <text class="table-name" x="1448" y="507">retiro_ciclo_asignaturas</text>
+    <text class="pk" x="1448" y="530">PK id</text>
+    <text class="fk" x="1448" y="550">FK retiro_ciclo_id</text>
+    <text class="field" x="1448" y="570">orden, asignatura, uv</text>
+  </g>
+
+  <g id="equivalencia_detalles">
+    <rect class="table detail" x="1060" y="640" width="300" height="125" />
+    <text class="table-name" x="1078" y="667">equivalencia_detalles</text>
+    <text class="pk" x="1078" y="690">PK id</text>
+    <text class="fk" x="1078" y="710">FK equivalencia_id</text>
+    <text class="field" x="1078" y="730">asignatura cursada/solicitada</text>
+    <text class="field" x="1078" y="750">uv, nota, resultado</text>
+  </g>
+
+  <g id="absorcion_absorbidas">
+    <rect class="table detail" x="1430" y="640" width="300" height="115" />
+    <text class="table-name" x="1448" y="667">absorcion_asignaturas_absorbidas</text>
+    <text class="pk" x="1448" y="690">PK id</text>
+    <text class="fk" x="1448" y="710">FK absorcion_id</text>
+    <text class="field" x="1448" y="730">cursada, absorbida, nota</text>
+  </g>
+
+  <g id="absorcion_no_existentes">
+    <rect class="table detail" x="1060" y="810" width="300" height="115" />
+    <text class="table-name" x="1078" y="837">absorcion_asignaturas_no_existentes</text>
+    <text class="pk" x="1078" y="860">PK id</text>
+    <text class="fk" x="1078" y="880">FK absorcion_id</text>
+    <text class="field" x="1078" y="900">asignatura, nota</text>
+  </g>
+
+  <g id="absorcion_reprobadas">
+    <rect class="table detail" x="1430" y="810" width="300" height="115" />
+    <text class="table-name" x="1448" y="837">absorcion_asignaturas_reprobadas</text>
+    <text class="pk" x="1448" y="860">PK id</text>
+    <text class="fk" x="1448" y="880">FK absorcion_id</text>
+    <text class="field" x="1448" y="900">asignatura, nota</text>
+  </g>
+
+  <!-- Reportes -->
+  <g id="informe">
+    <rect class="table report" x="650" y="1040" width="360" height="135" />
+    <text class="table-name" x="668" y="1067">informe_documentos_resumen</text>
+    <text class="pk" x="668" y="1090">PK id</text>
+    <text class="field" x="668" y="1110">source_table, source_id</text>
+    <text class="field" x="668" y="1130">tipo_documento, correlativo</text>
+    <text class="field" x="668" y="1150">fecha, estado, alumno, carrera</text>
+  </g>
+
+  <!-- Relaciones base -->
+  <path class="line" d="M300 202 C325 202 335 202 360 202" />
+  <text class="label" x="318" y="192">1:N</text>
+
+  <path class="line" d="M482 270 C482 285 255 285 255 295" />
+  <text class="label" x="336" y="283">1:N</text>
+
+  <path class="line" d="M482 270 C482 290 482 290 482 300" />
+  <path class="line" d="M300 352 C330 352 330 362 360 362" />
+
+  <path class="line" d="M605 362 C630 362 625 220 650 220" />
+  <path class="line" d="M900 212 C935 212 930 212 965 212" />
+
+  <!-- Relaciones documentos con estudiantes/carreras/usuarios -->
+  <path class="line" d="M482 425 C482 452 200 452 200 480" />
+  <path class="line" d="M482 425 C482 452 515 452 515 480" />
+  <path class="line" d="M482 425 C482 452 835 452 835 480" />
+  <path class="line" d="M482 425 C482 620 200 620 200 680" />
+  <path class="line" d="M482 425 C482 620 515 620 515 680" />
+
+  <path class="line" d="M605 210 C640 210 620 520 650 520" />
+  <path class="line" d="M605 210 C640 210 660 720 700 740" />
+
+  <path class="line" d="M775 275 C775 345 200 345 200 480" />
+  <path class="line" d="M775 275 C775 350 515 350 515 480" />
+  <path class="line" d="M775 275 C775 350 835 350 835 480" />
+  <path class="line" d="M775 275 C775 610 200 610 200 680" />
+  <path class="line" d="M775 275 C775 610 515 610 515 680" />
+  <path class="line" d="M775 275 C775 610 835 610 835 680" />
+
+  <path class="line" d="M300 202 C335 202 360 690 380 750" />
+  <path class="line" d="M300 202 C315 202 220 650 200 680" />
+  <path class="line" d="M300 202 C310 202 185 1100 185 1130" />
+  <path class="line" d="M300 202 C410 202 482 1100 482 1130" />
+
+  <!-- Detalles -->
+  <path class="line" d="M330 548 C600 548 790 548 1060 548" />
+  <path class="line" d="M650 548 C920 548 1160 548 1430 548" />
+  <path class="line" d="M970 548 C1015 548 1015 702 1060 702" />
+  <path class="line" d="M330 750 C725 750 1035 700 1430 700" />
+  <path class="line" d="M330 750 C620 750 770 865 1060 865" />
+  <path class="line" d="M330 750 C720 750 1040 865 1430 865" />
+
+  <!-- Informes: resumen polimórfico sin FK física -->
+  <path class="dash" d="M200 615 C240 960 560 1080 650 1095" />
+  <path class="dash" d="M515 615 C550 890 620 1040 650 1095" />
+  <path class="dash" d="M835 615 C850 820 840 970 830 1040" />
+  <path class="dash" d="M200 820 C310 990 520 1070 650 1095" />
+  <path class="dash" d="M515 820 C560 930 625 1030 650 1095" />
+  <path class="dash" d="M835 820 C835 910 830 990 830 1040" />
+
+  <!-- Leyenda -->
+  <rect x="1180" y="1038" width="550" height="160" rx="12" ry="12" fill="#ffffff" stroke="#cbd5e1" />
+  <text class="table-name" x="1200" y="1068">Leyenda</text>
+  <rect class="table base" x="1200" y="1085" width="22" height="14" />
+  <text class="note" x="1232" y="1097">Tablas académicas base</text>
+  <rect class="table security" x="1200" y="1110" width="22" height="14" />
+  <text class="note" x="1232" y="1122">Seguridad y auditoría</text>
+  <rect class="table document" x="1200" y="1135" width="22" height="14" />
+  <text class="note" x="1232" y="1147">Documentos principales</text>
+  <rect class="table detail" x="1200" y="1160" width="22" height="14" />
+  <text class="note" x="1232" y="1172">Tablas detalle 1:N</text>
+  <path class="line" d="M1450 1094 L1510 1094" />
+  <text class="note" x="1525" y="1098">Llave foránea física</text>
+  <path class="dash" d="M1450 1130 L1510 1130" />
+  <text class="note" x="1525" y="1134">Resumen para informes</text>
+  <text class="note" x="1200" y="1218">Nota: informe_documentos_resumen resume documentos por source_table/source_id.</text>
+</svg>

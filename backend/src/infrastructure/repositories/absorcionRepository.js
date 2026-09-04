@@ -1,4 +1,5 @@
 import pool from "../database/mysqlPool.js";
+import { dateOnly } from "./dateOnly.js";
 
 function buildAbsorcionCorrelativo(fecha, id) {
   const year = new Date(fecha).getFullYear();
@@ -36,7 +37,7 @@ export async function findAll({ page = 1, limit = 20, estado } = {}) {
     params,
   );
 
-  return { data: rows, total, page, limit };
+  return { data: rows.map(mapAbsorcion), total, page, limit };
 }
 
 export async function findById(id) {
@@ -91,7 +92,7 @@ export async function findById(id) {
     [id],
   );
 
-  return { ...absorcion, absorbidas, noExistentes, reprobadas };
+  return { ...mapAbsorcion(absorcion), absorbidas, noExistentes, reprobadas };
 }
 
 export async function create({ absorcion, absorbidas = [], noExistentes = [], reprobadas = [] }) {
@@ -111,7 +112,7 @@ export async function create({ absorcion, absorbidas = [], noExistentes = [], re
         absorcion.usuario_id ?? null,
         absorcion.facultad_nombre,
         absorcion.ciclo,
-        absorcion.fecha,
+        dateOnly(absorcion.fecha),
         absorcion.alumno_nombres,
         absorcion.alumno_apellidos,
         absorcion.carrera_origen,
@@ -120,12 +121,12 @@ export async function create({ absorcion, absorbidas = [], noExistentes = [], re
         absorcion.encabezado_dictamen,
         absorcion.decano_nombre,
         absorcion.facultad_firma_nombre,
-        absorcion.estado ?? "BORRADOR",
+        absorcion.estado ?? "CREADO",
       ],
     );
 
     const absorcionId = result.insertId;
-    const correlativo = buildAbsorcionCorrelativo(absorcion.fecha, absorcionId);
+    const correlativo = buildAbsorcionCorrelativo(dateOnly(absorcion.fecha), absorcionId);
     await conn.query(
       `UPDATE absorciones SET correlativo = ? WHERE id = ?`,
       [correlativo, absorcionId],
@@ -203,7 +204,7 @@ export async function update(id, { absorcion, absorbidas = [], noExistentes = []
       [
         absorcion.facultad_nombre,
         absorcion.ciclo,
-        absorcion.fecha,
+        dateOnly(absorcion.fecha),
         absorcion.alumno_nombres,
         absorcion.alumno_apellidos,
         absorcion.carrera_origen,
@@ -212,14 +213,14 @@ export async function update(id, { absorcion, absorbidas = [], noExistentes = []
         absorcion.encabezado_dictamen,
         absorcion.decano_nombre,
         absorcion.facultad_firma_nombre,
-        absorcion.estado ?? "BORRADOR",
+        absorcion.estado ?? "CREADO",
         absorcion.estudiante_id ?? null,
         absorcion.facultad_id ?? null,
         absorcion.usuario_id ?? null,
         id,
       ],
     );
-    const correlativo = buildAbsorcionCorrelativo(absorcion.fecha, id);
+    const correlativo = buildAbsorcionCorrelativo(dateOnly(absorcion.fecha), id);
     await conn.query(`UPDATE absorciones SET correlativo = ? WHERE id = ?`, [correlativo, id]);
 
     await conn.query(`DELETE FROM absorcion_asignaturas_absorbidas WHERE absorcion_id = ?`, [id]);
@@ -285,4 +286,20 @@ export async function update(id, { absorcion, absorbidas = [], noExistentes = []
 export async function remove(id) {
   const [result] = await pool.query(`DELETE FROM absorciones WHERE id = ?`, [id]);
   return result.affectedRows > 0;
+}
+
+export async function markAsPrinted(id) {
+  await pool.query(
+    `UPDATE absorciones
+     SET estado = 'IMPRESO'
+     WHERE id = ? AND estado = 'CREADO'`,
+    [id],
+  );
+
+  return findById(id);
+}
+
+function mapAbsorcion(row) {
+  if (!row) return null;
+  return { ...row, fecha: dateOnly(row.fecha) };
 }

@@ -28,6 +28,10 @@ export function actualizarRetiroCiclo(id, payload) {
   });
 }
 
+export function marcarRetiroCicloImpresa(id) {
+  return requestJson(`${BASE}/${id}/imprimir`, { method: "PATCH" });
+}
+
 export function eliminarRetiroCiclo(id) {
   return requestJson(`${BASE}/${id}`, { method: "DELETE" });
 }

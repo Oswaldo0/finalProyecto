@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { crearAbsorcion } from "../../../application/absorciones/absorcionesUseCases.js";
+import { AcademicCycleFields } from "../../components/shared/AcademicCycleFields.jsx";
 import { normalizeByField, toUppercaseText } from "../../utils/formNormalizers.js";
 
 const TABLA_ABSORCION_INICIAL = [
@@ -122,7 +123,7 @@ export function CrearAbsorcionPage() {
         encabezado_dictamen: formulario.encabezadoDictamen.trim(),
         decano_nombre: formulario.decanoNombre.trim(),
         facultad_firma_nombre: formulario.facultadFirma.trim(),
-        estado: "BORRADOR",
+        estado: "CREADO",
       },
       absorbidas: normalizeAbsorbidas(tablaAbsorcion),
       noExistentes: normalizeAsignaturas(tablaNoExiste),
@@ -234,17 +235,12 @@ export function CrearAbsorcionPage() {
                 required
               />
             </label>
-            <label className="grid gap-1 text-sm">
-              <span className="font-medium text-slate-700">Ciclo</span>
-              <input
-                type="text"
-                className="rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="Ej. I-2026"
-                value={formulario.ciclo}
-                onChange={(event) => handleInputChange("ciclo", event.target.value)}
-                required
-              />
-            </label>
+            <AcademicCycleFields
+              value={formulario.ciclo}
+              onChange={(value) => handleInputChange("ciclo", value)}
+              required
+              className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:col-span-1"
+            />
             <label className="grid gap-1 text-sm">
               <span className="font-medium text-slate-700">Fecha</span>
               <input

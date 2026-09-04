@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { listarAnotaciones } from "../../../application/anotaciones/anotacionesUseCases.js";
-import { openPrintWindow } from "../../utils/printDocument.js";
+import { PrintButton, PrintTable, PrintWindow, StatusBadge } from "../../components/shared/PrintWindow.jsx";
+import {
+  listarAnotaciones,
+  marcarAnotacionImpresa,
+} from "../../../application/anotaciones/anotacionesUseCases.js";
 
+import { openPrintWindow } from "../../utils/printDocument.js";
 export function ImprimirAnotacionPage() {
-  const navigate = useNavigate();
   const [documentos, setDocumentos] = useState([]);
   const [cargando, setCargando] = useState(true);
 
@@ -15,7 +17,18 @@ export function ImprimirAnotacionPage() {
       .finally(() => setCargando(false));
   }, []);
 
-  function handleImprimir(documento) {
+  async function handleImprimir(documento) {
+    setDocumentos((items) =>
+      items.map((item) => (item.id === documento.id ? { ...item, estado: "IMPRESO" } : item)),
+    );
+    marcarAnotacionImpresa(documento.id)
+      .then((impresa) => {
+        setDocumentos((items) =>
+          items.map((item) => (item.id === documento.id ? { ...item, estado: impresa.estado } : item)),
+        );
+      })
+      .catch(() => {});
+
     const body = `
       <table class="details">
         <tbody>
@@ -52,90 +65,40 @@ export function ImprimirAnotacionPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-slate-700">Imprimir anotación</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Aquí se listan las observaciones de clases registradas.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => navigate("/anotaciones")}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            Volver
-          </button>
-        </div>
-
-        {!cargando && documentos.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
-            <p className="text-sm font-semibold text-blue-800">Sin documentos disponibles</p>
-            <p className="mt-1 text-xs text-blue-700">
-              Crea tu primera observación de clases para verla aquí.
-            </p>
-          </div>
-        ) : null}
-
-        <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="min-w-full border-collapse text-sm">
-            <thead className="bg-slate-100">
-              <tr>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Correlativo</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Fecha</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Observador</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Asignatura/grupo</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Facultad</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Horario</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-left font-semibold text-slate-700">Estado</th>
-                <th className="border-b border-slate-200 px-4 py-3 text-center font-semibold text-slate-700">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cargando ? (
-                <tr>
-                  <td colSpan="8" className="px-4 py-10 text-center text-sm text-slate-500">
-                    Cargando anotaciones...
-                  </td>
-                </tr>
-              ) : documentos.length === 0 ? (
-                <tr>
-                  <td colSpan="8" className="px-4 py-10 text-center text-sm text-slate-500">
-                    No hay anotaciones para mostrar.
-                  </td>
-                </tr>
-              ) : (
-                documentos.map((documento) => (
-                  <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.fecha}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.observador}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.asignaturaGrupo}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.facultad}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.horario}</td>
-                    <td className="border-t border-slate-200 px-4 py-3">{documento.estado}</td>
-                    <td className="border-t border-slate-200 px-4 py-3 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleImprimir(documento)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: "0.95rem" }}>
-                          print
-                        </span>
-                        Imprimir
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+    <PrintWindow
+      title="Imprimir anotacion"
+      description="Aqui se listan las observaciones de clases registradas."
+      backTo="/anotaciones"
+      notice={
+        !cargando && documentos.length === 0
+          ? {
+              title: "Sin documentos disponibles",
+              detail: "Crea tu primera observacion de clases para verla aqui.",
+            }
+          : null
+      }
+    >
+      <PrintTable
+        columns={["Correlativo", "Fecha", "Observador", "Asignatura/grupo", "Facultad", "Horario", "Estado", "Accion"]}
+        loading={cargando}
+        loadingText="Cargando anotaciones..."
+        empty="No hay anotaciones para mostrar."
+        rows={documentos}
+        renderRow={(documento) => (
+          <tr key={documento.id} className="odd:bg-white even:bg-slate-50">
+            <td className="border-t border-slate-200 px-4 py-3">{documento.correlativo}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.fecha}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.observador}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.asignaturaGrupo}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.facultad}</td>
+            <td className="border-t border-slate-200 px-4 py-3">{documento.horario}</td>
+            <td className="border-t border-slate-200 px-4 py-3"><StatusBadge value={documento.estado} /></td>
+            <td className="border-t border-slate-200 px-4 py-3 text-center">
+              <PrintButton onClick={() => handleImprimir(documento)} />
+            </td>
+          </tr>
+        )}
+      />
+    </PrintWindow>
   );
 }

@@ -1,3 +1,10 @@
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
+export function buildApiUrl(url) {
+  if (!API_BASE_URL || /^https?:\/\//i.test(url)) return url;
+  return `${API_BASE_URL}${url}`;
+}
+
 export async function requestJson(url, options = {}) {
   const token = localStorage.getItem("auth_token");
   const headers = new Headers(options.headers ?? {});
@@ -6,7 +13,7 @@ export async function requestJson(url, options = {}) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(url, {
+  const response = await fetch(buildApiUrl(url), {
     ...options,
     headers,
   });

@@ -3,6 +3,7 @@ import {
   actualizarPenalidad as apiActualizar,
   urlPdfPenalidad,
   listarPenalidades,
+  marcarPenalidadImpresa as apiMarcarImpresa,
   obtenerPenalidad,
   eliminarPenalidad,
   buscarEstudiantes,
@@ -17,6 +18,10 @@ export function crearPenalidad(payload) {
 
 export function modificarPenalidad(id, payload) {
   return apiActualizar(id, payload);
+}
+
+export function marcarPenalidadImpresa(id) {
+  return apiMarcarImpresa(id);
 }
 
 export function imprimirPenalidad(id) {

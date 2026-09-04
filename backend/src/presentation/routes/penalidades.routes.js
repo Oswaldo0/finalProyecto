@@ -35,6 +35,15 @@ router.get("/:id/pdf", async (req, res, next) => {
   }
 });
 
+router.patch("/:id/imprimir", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), async (req, res, next) => {
+  try {
+    const penalidad = await service.marcarImpresa(Number(req.params.id));
+    res.json(penalidad);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post("/", requireRoles("ADMIN", "DECANO", "SECRETARIO", "OPERADOR"), async (req, res, next) => {
   try {
     const penalidad = await service.crear(req.body);

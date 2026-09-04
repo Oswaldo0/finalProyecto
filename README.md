@@ -35,10 +35,7 @@ Backend:
 ```bash
 cd backend
 npm install
-npm run migrate:correlativos
-npm run migrate:auth
-npm run migrate:auditoria
-npm run migrate:informes
+npm run migrate:all
 npm run dev
 ```
 
@@ -66,7 +63,7 @@ DB_PASSWORD=admin
 DB_NAME=bd_uso_sonsonate
 JWT_SECRET=change_this_to_a_random_secret_with_at_least_32_chars
 AUTH_SEED_ADMIN_USERNAME=admin
-AUTH_SEED_ADMIN_PASSWORD=AdminUso2026!
+AUTH_SEED_ADMIN_PASSWORD=cambia_esta_contrasena_inicial
 ```
 
 ## Usuario Inicial
@@ -74,7 +71,7 @@ AUTH_SEED_ADMIN_PASSWORD=AdminUso2026!
 Si la tabla `usuarios` está vacía, `npm run migrate:auth` crea:
 
 - Usuario: `admin`
-- Contraseña: `AdminUso2026!`
+- Contraseña: el valor configurado en `AUTH_SEED_ADMIN_PASSWORD`
 
 Cambiar esta contraseña antes de presentar o desplegar el sistema.
 
@@ -87,6 +84,25 @@ npm run start
 
 ```bash
 cd frontend
+npm run build
+```
+
+## Producción
+
+La guía de despliegue está en `docs/PRODUCCION.md`.
+
+Resumen:
+
+```bash
+cd backend
+npm ci
+npm run migrate:all
+NODE_ENV=production npm run start:prod
+```
+
+```bash
+cd frontend
+npm ci
 npm run build
 ```
 

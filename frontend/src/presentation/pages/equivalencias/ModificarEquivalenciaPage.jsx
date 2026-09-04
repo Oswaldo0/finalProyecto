@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  listarEquivalencias,
   modificarEquivalencia,
   obtenerEquivalencia,
 } from "../../../application/equivalencias/equivalenciasUseCases.js";
+import { AcademicUvFields, hoursFromUv } from "../../components/shared/AcademicUvFields.jsx";
 import { normalizeNonNegativeDecimal, toUppercaseText } from "../../utils/formNormalizers.js";
 
 const TABLA_INICIAL = [
   {
     asignaturaCursada: "",
+    horasAcademicas: "",
     uv: "",
     nota: "",
     institucion: "",
@@ -24,7 +27,9 @@ const TEXTO_SOLICITUD_INICIAL =
 export function ModificarEquivalenciaPage() {
   const navigate = useNavigate();
   const { id: routeId } = useParams();
-  const [lookupId, setLookupId] = useState(routeId ?? "");
+  const [lista, setLista] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [cargandoLista, setCargandoLista] = useState(true);
   const [loadedId, setLoadedId] = useState(null);
   const [showCancelNotice, setShowCancelNotice] = useState(false);
   const [mensajeExito, setMensajeExito] = useState("");
@@ -46,6 +51,33 @@ export function ModificarEquivalenciaPage() {
     if (routeId) cargarEquivalencia(routeId);
   }, [routeId]);
 
+  useEffect(() => {
+    listarEquivalencias({ limit: 100 })
+      .then((res) => setLista(res.data ?? []))
+      .catch(() => setLista([]))
+      .finally(() => setCargandoLista(false));
+  }, []);
+
+  const listaFiltrada = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return lista;
+
+    return lista.filter((equivalencia) => {
+      const texto = [
+        equivalencia.correlativo,
+        equivalencia.alumno_nombre,
+        equivalencia.carrera_destino,
+        equivalencia.fecha_solicitud ? String(equivalencia.fecha_solicitud).slice(0, 10) : "",
+        equivalencia.estado,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return texto.includes(termino);
+    });
+  }, [busqueda, lista]);
+
   async function cargarEquivalencia(id) {
     if (!id) return;
     setCargando(true);
@@ -55,7 +87,6 @@ export function ModificarEquivalenciaPage() {
     try {
       const equivalencia = await obtenerEquivalencia(id);
       setLoadedId(equivalencia.id);
-      setLookupId(String(equivalencia.id));
       setNombre(equivalencia.alumno_nombre ?? "");
       setCarrerasCursadas(equivalencia.carreras_cursadas ?? "");
       setCarreraDestino(equivalencia.carrera_destino ?? "");
@@ -69,6 +100,7 @@ export function ModificarEquivalenciaPage() {
         equivalencia.detalles?.length
           ? equivalencia.detalles.map((detalle) => ({
               asignaturaCursada: detalle.asignatura_cursada ?? "",
+              horasAcademicas: hoursFromUv(detalle.uv),
               uv: detalle.uv != null ? String(detalle.uv) : "",
               nota: detalle.nota != null ? String(detalle.nota) : "",
               institucion: detalle.institucion_nombre ?? "",
@@ -87,7 +119,7 @@ export function ModificarEquivalenciaPage() {
   }
 
   function normalizeTablaField(field, value) {
-    if (field === "uv" || field === "nota") return normalizeNonNegativeDecimal(value);
+    if (field === "nota") return normalizeNonNegativeDecimal(value);
     if (field === "asignaturaCursada" || field === "asignaturaSolicitada" || field === "institucion") {
       return toUppercaseText(value);
     }
@@ -98,6 +130,14 @@ export function ModificarEquivalenciaPage() {
     setTabla((prev) =>
       prev.map((row, itemIndex) =>
         itemIndex === index ? { ...row, [field]: normalizeTablaField(field, value) } : row,
+      ),
+    );
+  }
+
+  function handleTablaUvChange(index, horasAcademicas, uv) {
+    setTabla((prev) =>
+      prev.map((row, itemIndex) =>
+        itemIndex === index ? { ...row, horasAcademicas, uv } : row,
       ),
     );
   }
@@ -124,15 +164,6 @@ export function ModificarEquivalenciaPage() {
     setTabla((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function handleBuscar(event) {
-    event.preventDefault();
-    if (!lookupId.trim()) {
-      setMensajeError("Ingrese el ID de una equivalencia.");
-      return;
-    }
-    navigate(`/equivalencias/modificar/${lookupId.trim()}`);
-  }
-
   function handleCancelAction() {
     setShowCancelNotice(true);
     setTimeout(() => navigate("/equivalencias"), 1200);
@@ -152,6 +183,7 @@ export function ModificarEquivalenciaPage() {
       .filter((row) => row.asignaturaCursada.trim() !== "" && row.asignaturaSolicitada.trim() !== "")
       .map((row) => ({
         asignatura_cursada: row.asignaturaCursada.trim(),
+        horas_academicas: row.horasAcademicas !== "" ? Number(row.horasAcademicas) : null,
         uv: row.uv !== "" ? Number(row.uv) : null,
         nota: row.nota !== "" ? Number(row.nota) : null,
         institucion_nombre: row.institucion.trim() || null,
@@ -170,7 +202,7 @@ export function ModificarEquivalenciaPage() {
         decano_nombre: nombreDecano.trim() || null,
         fecha_decano: fechaDecano || null,
         alumno_nombre_firma: nombreAlumno.trim() || null,
-        estado: "BORRADOR",
+        estado: "CREADO",
       },
       detalles,
     };
@@ -191,33 +223,89 @@ export function ModificarEquivalenciaPage() {
       <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="text-base font-semibold uppercase tracking-wide text-slate-800">
-            Modificar equivalencia
+            Historial equivalencia
           </h2>
           <p className="mt-1 text-sm text-slate-500">
             Busque una solicitud existente, revise sus datos y guarde los cambios autorizados.
           </p>
         </div>
 
-        <form className="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-end" onSubmit={handleBuscar}>
-          <TextInput label="ID de equivalencia" value={lookupId} onChange={setLookupId} />
-          <button type="submit" disabled={cargando} className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60">
-            {cargando ? "Buscando..." : "Buscar"}
-          </button>
-        </form>
+        <div className="mt-4">
+          <label className="grid gap-1 text-sm sm:max-w-md">
+            <span className="font-medium text-slate-700">Buscar reportes creados</span>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+              <span className="material-symbols-outlined text-slate-400" style={{ fontSize: "1.15rem" }}>search</span>
+              <input
+                type="search"
+                className="w-full bg-transparent text-sm outline-none"
+                placeholder="Buscar por correlativo, alumno, carrera, fecha o estado"
+                value={busqueda}
+                onChange={(event) => setBusqueda(event.target.value)}
+              />
+              {busqueda ? (
+                <button type="button" onClick={() => setBusqueda("")} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Limpiar busqueda">
+                  <span className="material-symbols-outlined" style={{ fontSize: "1rem" }}>close</span>
+                </button>
+              ) : null}
+            </div>
+          </label>
+        </div>
 
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white overflow-x-auto">
+          {cargandoLista ? (
+            <p className="px-4 py-6 text-sm text-slate-500">Cargando registros...</p>
+          ) : lista.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-slate-500">No hay equivalencias registradas aún.</p>
+          ) : listaFiltrada.length === 0 ? (
+            <p className="px-4 py-6 text-sm text-slate-500">No se encontraron equivalencias con esa búsqueda.</p>
+          ) : (
+            <table className="min-w-full border-collapse text-sm">
+              <thead className="bg-slate-100">
+                <tr>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Correlativo</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Alumno</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Carrera destino</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Fecha</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-left text-xs font-semibold text-slate-600">Estado</th>
+                  <th className="border-b border-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-600">Seleccionar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listaFiltrada.map((equivalencia) => (
+                  <tr key={equivalencia.id} className={`odd:bg-white even:bg-slate-50 ${loadedId === equivalencia.id ? "ring-2 ring-inset ring-blue-400" : ""}`}>
+                    <td className="border-t border-slate-200 px-4 py-2">{equivalencia.correlativo}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{equivalencia.alumno_nombre}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{equivalencia.carrera_destino || "-"}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{equivalencia.fecha_solicitud ? String(equivalencia.fecha_solicitud).slice(0, 10) : ""}</td>
+                    <td className="border-t border-slate-200 px-4 py-2">{equivalencia.estado}</td>
+                    <td className="border-t border-slate-200 px-4 py-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => cargarEquivalencia(equivalencia.id)}
+                        disabled={cargando}
+                        className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                      >
+                        {loadedId === equivalencia.id ? "Seleccionado" : "Editar"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {!loadedId && !cargando ? (
+          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+            <p className="text-sm font-semibold text-blue-800">Selecciona una equivalencia de la lista para editarla.</p>
+          </div>
+        ) : null}
+
+        {loadedId && !cargando ? (
         <form className="mt-4 grid gap-4" onSubmit={handleSubmit}>
           {showCancelNotice ? <Alert tone="warning" message="Operación cancelada. Redirigiendo..." /> : null}
           {mensajeExito ? <Alert tone="success" message={mensajeExito} /> : null}
           {mensajeError ? <Alert tone="error" message={mensajeError} /> : null}
-          {!loadedId ? (
-            <section className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-              <p className="text-sm font-semibold text-blue-800">Seleccione un registro</p>
-              <p className="mt-1 text-xs text-blue-700">
-                Ingrese el ID de una equivalencia para cargarla antes de modificar.
-              </p>
-            </section>
-          ) : null}
-
           <Section title="Datos del estudiante">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <TextInput label="Nombre" value={nombre} onChange={(value) => setNombre(toUppercaseText(value))} />
@@ -241,7 +329,7 @@ export function ModificarEquivalenciaPage() {
                 <thead className="bg-slate-100 text-xs uppercase tracking-wide text-slate-600">
                   <tr>
                     <Th>Asignatura cursada</Th>
-                    <Th center>U.V.</Th>
+                    <Th center>Horas / U.V.</Th>
                     <Th center>Nota</Th>
                     <Th>Institución</Th>
                     <Th>Asignatura solicitada</Th>
@@ -253,7 +341,14 @@ export function ModificarEquivalenciaPage() {
                   {tabla.map((row, index) => (
                     <tr key={index} className="odd:bg-white even:bg-slate-50">
                       <Td><TableInput value={row.asignaturaCursada} onChange={(value) => handleTablaChange(index, "asignaturaCursada", value)} placeholder="Asignatura cursada" /></Td>
-                      <Td><TableInput type="number" min="0" step="0.01" value={row.uv} onChange={(value) => handleTablaChange(index, "uv", value)} placeholder="0.00" center /></Td>
+                      <Td>
+                        <AcademicUvFields
+                          compact
+                          hours={row.horasAcademicas}
+                          uv={row.uv}
+                          onChange={(hours, uv) => handleTablaUvChange(index, hours, uv)}
+                        />
+                      </Td>
                       <Td><TableInput type="number" min="0" step="0.01" value={row.nota} onChange={(value) => handleTablaChange(index, "nota", value)} placeholder="0.00" center /></Td>
                       <Td><TableInput value={row.institucion} onChange={(value) => handleTablaChange(index, "institucion", value)} placeholder="Institución" /></Td>
                       <Td><TableInput value={row.asignaturaSolicitada} onChange={(value) => handleTablaChange(index, "asignaturaSolicitada", value)} placeholder="Asignatura solicitada" /></Td>
@@ -293,10 +388,11 @@ export function ModificarEquivalenciaPage() {
               Cancelar
             </button>
             <button type="submit" disabled={!loadedId || guardando} className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-60">
-              {guardando ? "Actualizando..." : "Actualizar equivalencia"}
+              {guardando ? "Guardando..." : "Historial equivalencia"}
             </button>
           </div>
         </form>
+        ) : null}
       </section>
     </main>
   );
